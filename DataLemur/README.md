@@ -1,4 +1,4 @@
-<h1 align="center">Solutions for <a href="" target="_blank">SQL</a> Challenges hosted on <a href="https://datalemur.com?referralCode=hRH4ho3l" target="_blank">DataLemur</a> </h1>
+<h1 align="center">Solutions for <a href="" target="_blank">SQL</a> Challenges hosted on <a href="https://datalemur.com?referralCode=lf62tnGe" target="_blank">DataLemur</a> </h1>
 
 ## 🔎Overview
 
@@ -36,47 +36,48 @@ This repository contains my solutions for the SQL challenges posted on [DataLemu
 
 #### Difficulty Level: Medium
 
-| ID | COMPANY         | TITLE                             | CATEGORY | DIFFICULTY |
-|----|-----------------|-----------------------------------|----------|------------|
-| 1  | Uber            | User's Third Transaction          |          | Medium     |
-| 2  | Snapchat        | Sending vs. Opening Snaps         |          | Medium     |
-| 3  | Twitter         | Tweets' Rolling Averages          |          | Medium     |
-| 4  | Amazon          | Highest-Grossing Items            |          | Medium     |
-| 5  | Spotify         | Top 5 Artists                     |          | Medium     |
-| 6  | TikTok          | Signup Activation Rate            |          | Medium     |
-| 7  | Accenture       | Fill Missing Client Data          | Premium  | Medium     |
-| 8  | Spotify         | Spotify Streaming History         | Premium  | Medium     |
-| 9  | Microsoft       | Mean, Median, Mode                | Premium  | Medium     |
-| 10 | CVS Health      | Pharmacy Analytics (Part 4)       | Premium  | Medium     |
-| 11 | Walmart         | Frequently Purchased Pairs        | Premium  | Medium     |
-| 12 | Microsoft       | Supercloud Customer               |          | Medium     |
-| 13 | Google          | Odd and Even Measurements         |          | Medium     |
-| 14 | Airbnb          | Booking Referral Source           | Premium  | Medium     |
-| 15 | Amazon          | User Shopping Sprees              | Premium  | Medium     |
-| 16 | Uber            | 2nd Ride Delay                    | Premium  | Medium     |
-| 17 | Walmart         | Histogram of Users and Purchases  |          | Medium     |
-| 18 | Google          | Google Maps Flagged UGC           | Premium  | Medium     |
-| 19 | Alibaba         | Compressed Mode                   |          | Medium     |
-| 20 | JPMorgan Chase  | Card Launch Success               |          | Medium     |
-| 21 | Verizon         | International Call Percentage     |          | Medium     |
-| 22 | UnitedHealth    | Patient Support Analysis (Part 2) |          | Medium     |
-| 23 | LinkedIn        | LinkedIn Power Creators (Part 2)  | Premium  | Medium     |
-| 24 | PayPal          | Unique Money Transfer Relationships| Premium  | Medium     |
-| 25 | Twitter         | User Session Activity             | Premium  | Medium     |
-| 26 | Etsy            | First Transaction                | Premium  | Medium     |
-| 27 | Facebook        | Email Table Transformation        | Premium  | Medium     |
-| 28 | Adobe           | Photoshop Revenue Analysis        | Premium  | Medium     |
-| 29 | Google          | Consulting Bench Time            | Premium  | Medium     |
-| 30 | Oracle          | Sales Team Compensation          | Premium  | Medium     |
-| 31 | Salesforce      | Average Deal Size (Part 2)       | Premium  | Medium     |
-| 32 | Amazon          | Cumulative Purchases by Product Type| Premium | Medium     |
-| 33 | Google          | Invalid Search Results            | Premium  | Medium     |
-| 34 | Stitch Fix      | Repeat Purchases on Multiple Days| Premium  | Medium     |
-| 35 | Accenture       | Compensation Outliers             | Premium  | Medium     |
-| 36 | Bloomberg       | FAANG Stock Inter-Month Change (Part 2) | | Medium  |
-| 37 |                 | Top Three Salaries                |          | Medium     |
-| 38 |                 | Second Highest Salary             |          | Medium     |
-| 39 | Bloomberg       | FAANG Stock Min-Max (Part 1)     |          | Medium     |
+| ID | COMPANY         | TITLE                             | CATEGORY | DIFFICULTY | STATUS |
+|----|-----------------|-----------------------------------|----------|------------|-----------|
+| 1  | Uber            | User's Third Transaction          |          | Medium     | [x]       |
+| 2  | Snapchat        | Sending vs. Opening Snaps         |          | Medium     | [X]       |
+| 3  | Twitter         | Tweets' Rolling Averages          |          | Medium     | [X]       |
+| 4  | Amazon          | Highest-Grossing Items            |          | Medium     | [X]       |
+| 5  | Spotify         | Top 5 Artists                     |          | Medium     | [X]       |
+| 6  | TikTok          | Signup Activation Rate            |          | Medium     | [X]       |
+| 7  | Accenture       | Fill Missing Client Data          | Premium  | Medium     | [X]       |
+| 8  | Spotify         | Spotify Streaming History         | Premium  | Medium     | [ ]       |
+| 9  | Microsoft       | Mean, Median, Mode                | Premium  | Medium     | [ ]       |
+| 10 | CVS Health      | Pharmacy Analytics (Part 4)       | Premium  | Medium     | [ ]       |
+| 11 | Walmart         | Frequently Purchased Pairs        | Premium  | Medium     | [ ]       |
+| 12 | Microsoft       | Supercloud Customer               |          | Medium     | [X]       |
+| 13 | Google          | Odd and Even Measurements         |          | Medium     | [X]       |
+| 14 | Airbnb          | Booking Referral Source           | Premium  | Medium     | [ ]       |
+| 15 | Amazon          | User Shopping Sprees              | Premium  | Medium     | [ ]       |
+| 16 | Uber            | 2nd Ride Delay                    | Premium  | Medium     | [ ]       |
+| 17 | Walmart         | Histogram of Users and Purchases  |          | Medium     | [X]       |
+| 18 | Google          | Google Maps Flagged UGC           | Premium  | Medium     | [ ]       |
+| 19 | Alibaba         | Compressed Mode                   |          | Medium     | [ ]       |
+| 20 | JPMorgan Chase  | Card Launch Success               |          | Medium     | [X]       |
+| 21 | Verizon         | International Call Percentage     |          | Medium     | [X]       |
+| 22 | UnitedHealth    | Patient Support Analysis (Part 2) |          | Medium     | [X]       |
+| 23 | LinkedIn        | LinkedIn Power Creators (Part 2)  | Premium  | Medium     | [ ]       |
+| 24 | PayPal          | Unique Money Transfer Relationships| Premium  | Medium     | [ ]       |
+| 25 | Twitter         | User Session Activity             | Premium  | Medium     | [ ]       |
+| 26 | Etsy            | First Transaction                | Premium  | Medium     | [ ]       |
+| 27 | Facebook        | Email Table Transformation        | Premium  | Medium     | [ ]       |
+| 28 | Adobe           | Photoshop Revenue Analysis        | Premium  | Medium     | [ ]       |
+| 29 | Google          | Consulting Bench Time            | Premium  | Medium     | [ ]       |
+| 30 | Oracle          | Sales Team Compensation          | Premium  | Medium     | [ ]       |
+| 31 | Salesforce      | Average Deal Size (Part 2)       | Premium  | Medium     | [ ]       |
+| 32 | Amazon          | Cumulative Purchases by Product Type| Premium | Medium     | [ ]       |
+| 33 | Google          | Invalid Search Results            | Premium  | Medium     | [ ]       |
+| 34 | Stitch Fix      | Repeat Purchases on Multiple Days| Premium  | Medium     | [ ]       |
+| 35 | Accenture       | Compensation Outliers             | Premium  | Medium     | [ ]       |
+| 36 | Bloomberg       | FAANG Stock Inter-Month Change (Part 2) |    | Medium     | [ ]       |
+| 37 |                 | Top Three Salaries                |          | Medium     | [X]       |
+| 38 |                 | Second Highest Salary             |          | Medium     | [X]       |
+| 39 | Bloomberg       | FAANG Stock Min-Max (Part 1)     |          | Medium     | [X]       |
+
 
 
 #### Difficulty Level: Hard
