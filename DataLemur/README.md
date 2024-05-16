@@ -1,11 +1,14 @@
 <h1 align="center">Solutions for <a href="" target="_blank">SQL</a> Challenges hosted on <a href="https://datalemur.com?referralCode=lf62tnGe" target="_blank">DataLemur</a> </h1>
 
-## 🔎Overview
+## Overview
 
 This repository contains my solutions for the SQL challenges posted on [DataLemur](https://datalemur.com/sql-interview-questions) website. The solution queries are executed on the integrated PostgreSQL environment on the same website.
 
-#### Difficulty Level: Easy
+## Practice
+- [Datalemur: Advanced Real SQL interview Questions](https://datalemur.com/blog/advanced-sql-interview-questions)
 
+
+#### Difficulty Level: Easy
 | ID | Challenge | Solution Script |
 |:------:|------------|:---------:|
 | 01 | [Cities With Completed Trades](https://datalemur.com/questions/completed-trades) | [Solution](https://github.com/Ereh11/DateLemur-SQL-Interview-Questions/blob/main/DataLemur-SQL-Challenges/Easy/Cities%20With%20Completed%20Trades.sql)
@@ -35,12 +38,11 @@ This repository contains my solutions for the SQL challenges posted on [DataLemu
 | 25 | [Compressed Mean](https://datalemur.com/questions/alibaba-compressed-mean) | [Solution](https://github.com/Ereh11/DateLemur-SQL-Interview-Questions/blob/main/DataLemur-SQL-Challenges/Easy/Compressed%20Mean.sql)
 
 #### Difficulty Level: Medium
-
 | ID | COMPANY         | TITLE                             | CATEGORY | DIFFICULTY | STATUS |
 |----|-----------------|-----------------------------------|----------|------------|-----------|
-| 1  | Uber            | User's Third Transaction          |          | Medium     | [x]       |
+| 1  | Uber            | User's Third Transaction          |          | Medium     | [X]       |
 | 2  | Snapchat        | Sending vs. Opening Snaps         |          | Medium     | [X]       |
-| 3  | Twitter         | Tweets' Rolling Averages          |          | Medium     | [X]       |
+| 3  | Twitter         | Tweets' Rolling Averages          |          | Medium     | [ ]       |
 | 4  | Amazon          | Highest-Grossing Items            |          | Medium     | [X]       |
 | 5  | Spotify         | Top 5 Artists                     |          | Medium     | [X]       |
 | 6  | TikTok          | Signup Activation Rate            |          | Medium     | [X]       |
@@ -56,29 +58,27 @@ This repository contains my solutions for the SQL challenges posted on [DataLemu
 | 16 | Uber            | 2nd Ride Delay                    | Premium  | Medium     | [ ]       |
 | 17 | Walmart         | Histogram of Users and Purchases  |          | Medium     | [X]       |
 | 18 | Google          | Google Maps Flagged UGC           | Premium  | Medium     | [ ]       |
-| 19 | Alibaba         | Compressed Mode                   |          | Medium     | [ ]       |
+| 19 | Alibaba         | Compressed Mode                   |          | Medium     | [X]       |
 | 20 | JPMorgan Chase  | Card Launch Success               |          | Medium     | [X]       |
 | 21 | Verizon         | International Call Percentage     |          | Medium     | [X]       |
 | 22 | UnitedHealth    | Patient Support Analysis (Part 2) |          | Medium     | [X]       |
 | 23 | LinkedIn        | LinkedIn Power Creators (Part 2)  | Premium  | Medium     | [ ]       |
-| 24 | PayPal          | Unique Money Transfer Relationships| Premium  | Medium     | [ ]       |
+| 24 | PayPal          | Unique Money Transfer Relationships| Premium  | Medium    | [ ]       |
 | 25 | Twitter         | User Session Activity             | Premium  | Medium     | [ ]       |
-| 26 | Etsy            | First Transaction                | Premium  | Medium     | [ ]       |
+| 26 | Etsy            | First Transaction                | Premium  | Medium      | [ ]       |
 | 27 | Facebook        | Email Table Transformation        | Premium  | Medium     | [ ]       |
 | 28 | Adobe           | Photoshop Revenue Analysis        | Premium  | Medium     | [ ]       |
-| 29 | Google          | Consulting Bench Time            | Premium  | Medium     | [ ]       |
-| 30 | Oracle          | Sales Team Compensation          | Premium  | Medium     | [ ]       |
-| 31 | Salesforce      | Average Deal Size (Part 2)       | Premium  | Medium     | [ ]       |
-| 32 | Amazon          | Cumulative Purchases by Product Type| Premium | Medium     | [ ]       |
+| 29 | Google          | Consulting Bench Time            | Premium  | Medium      | [ ]       |
+| 30 | Oracle          | Sales Team Compensation          | Premium  | Medium      | [ ]       |
+| 31 | Salesforce      | Average Deal Size (Part 2)       | Premium  | Medium      | [ ]       |
+| 32 | Amazon          | Cumulative Purchases by Product Type| Premium | Medium    | [ ]       |
 | 33 | Google          | Invalid Search Results            | Premium  | Medium     | [ ]       |
-| 34 | Stitch Fix      | Repeat Purchases on Multiple Days| Premium  | Medium     | [ ]       |
+| 34 | Stitch Fix      | Repeat Purchases on Multiple Days| Premium  | Medium      | [ ]       |
 | 35 | Accenture       | Compensation Outliers             | Premium  | Medium     | [ ]       |
 | 36 | Bloomberg       | FAANG Stock Inter-Month Change (Part 2) |    | Medium     | [ ]       |
 | 37 |                 | Top Three Salaries                |          | Medium     | [X]       |
 | 38 |                 | Second Highest Salary             |          | Medium     | [X]       |
-| 39 | Bloomberg       | FAANG Stock Min-Max (Part 1)     |          | Medium     | [X]       |
-
-
+| 39 | Bloomberg       | FAANG Stock Min-Max (Part 1)     |          | Medium      | [X]       |
 
 #### Difficulty Level: Hard
 
