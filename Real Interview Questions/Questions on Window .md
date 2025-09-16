@@ -143,28 +143,98 @@ ORDER BY year, month;
 ```
 
 
-#### Question 4:
-
+#### Question 4: Find the first and last time each user was active on each platform
+Imagine you have activity data for each one of your users. Users could be active on either Desktop or Mobile. Your stakeholders approach you and ask you to put together a summary of each user activity along with the first and last time they were active on each platform.
 
 Create and Insert Statements: 
 ```sql
+-- Create the user_activity table
+CREATE TABLE user_activity (
+    activity_date DATE,
+    platform VARCHAR(20),
+    user_id VARCHAR(50),
+    plays INT,
+    downloads INT
+);
 
+-- Insert sample data with varied activity dates
+INSERT INTO user_activity (activity_date, platform, user_id, plays, downloads) VALUES
+('2019-01-07', 'Mobile', '13b71d6f91ab81', 47, 19),
+('2019-01-08', 'Mobile', '13b71d6f91ab81', 12, 5),
+('2019-01-05', 'Mobile', '13b71d6f91ab81', 25, 8),
+('2019-01-07', 'Desktop', '5a07edac1a336f', 25, 5),
+('2019-01-09', 'Desktop', '5a07edac1a336f', 40, 10),
+('2019-01-07', 'Mobile', 'b7047a6a5ec0d4', 34, 3),
+('2019-01-07', 'Desktop', '2216df5337ee24', 110, 13),
+('2019-01-07', 'Desktop', '768b6f97687129', 18, 4),
+('2019-01-07', 'Mobile', 'a6ab2100403dac', 7, 5),
+('2019-01-08', 'Desktop', '2646c993ceb3c6f', 8, 5),
+('2019-01-07', 'Desktop', '3848287b83eb4fb', 6, 5),
+('2019-01-07', 'Desktop', 'fdc457eabc7dbcf', 32, 26),
+('2019-01-07', 'Desktop', 'c9eff36a46c7c61a', 3, 3);
+```
+
+Solution 1: 
+```sql
+select
+user_id,
+platform,
+min(activity_date) as first_activity,
+max(activity_date) as last_activity
+from user_activity
+group by 1,2
+order by 1
+```
+`Solution 2:`
+```sql
+select
+distinct user_id,
+platform,
+MIN(activity_date) OVER (PARTITION BY platform, user_id) as first_activity,
+MAX(activity_date) OVER (PARTITION BY platform, user_id) as last_activity
+from user_activity
+group by user_id, platform, activity_date
+order by 1;
+```
+
+#### `Question 5: Calculate Month-over-Month revenue growth`
+If you have revenue table and your stakeholders approach you and asks How well is the company growing its sales revenue over a given time period, for example year-over-year?
+
+Create and Insert Statements: 
+```sql
+CREATE TABLE monthly_revenue (
+    date DATE,
+    revenue DECIMAL(10, 2)
+);
+
+INSERT INTO monthly_revenue (date, revenue) VALUES
+('2019-01-01', 5000.00), ('2019-02-01', 5500.00), ('2019-03-01', 6100.00), ('2019-04-01', 6800.00),
+('2019-05-01', 3380.90), ('2019-06-01', 8000.00), ('2019-07-01', 8500.00), ('2019-08-01', 9000.00),
+('2019-09-01', 9500.00), ('2019-10-01', 10000.00), ('2019-11-01', 11000.00), ('2019-12-01', 12000.00),
+('2020-01-01', 13000.00), ('2020-02-01', 14000.00), ('2020-03-01', 15000.00), ('2020-04-01', 16000.00),
+('2020-05-01', 17000.00), ('2020-06-01', 18000.00), ('2020-07-01', 19581.10), ('2020-08-01', 20000.00),
+('2020-09-01', 21000.00), ('2020-10-01', 22000.00), ('2020-11-01', 23000.00), ('2020-12-01', 24000.00),
+('2021-01-01', 25000.00), ('2021-02-01', 26000.00), ('2021-03-01', 27000.00), ('2021-04-01', 24879.00),
+('2021-05-01', 29000.00), ('2021-06-01', 30000.00), ('2021-07-01', 26747.40), ('2021-08-01', 32000.00),
+('2021-09-01', 33000.00), ('2021-10-01', 34000.00), ('2021-11-01', 35000.00), ('2021-12-01', 36000.00),
+('2022-11-01', 169414.70), ('2022-12-01', 13957.60);
 ```
 
 Solution: 
 ```sql
-
-```
-
-#### Question 5:
-
-
-Create and Insert Statements: 
-```sql
-
-```
-
-Solution: 
-```sql
+WITH yearly_revenue AS (
+    SELECT
+    EXTRACT(YEAR FROM date) AS year,
+    SUM(revenue) AS total_revenue
+    FROM monthly_revenue
+    GROUP BY year
+)
+SELECT
+    year,
+    total_revenue,
+    LAG(total_revenue) OVER (ORDER BY year) AS previous_year_revenue,
+    (total_revenue - LAG(total_revenue) OVER (ORDER BY year)) * 100 / LAG(total_revenue) OVER (ORDER BY year) AS yoy_growth_percentage
+FROM yearly_revenue
+ORDER BY year;
 
 ```
