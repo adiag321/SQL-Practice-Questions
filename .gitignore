@@ -1,0 +1,11 @@
+.ipynb_checkpoints/
+.DS_Store
+*.pyc
+extras/
+.code-workspace
+.vscode
+.joblib
+
+# vscode
+*.code-workspace
+/.vscode/*.code-workspace
