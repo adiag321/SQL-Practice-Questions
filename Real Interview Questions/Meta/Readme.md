@@ -1,6 +1,6 @@
 # Challenging SQL Questions Asked at Meta!
 
-### Question 1
+## Question 1
 You’re given a table with Facebook posts & your task is to:
 * Identify users who posted at least twice in the year 2025.
 * For each user, find the number of days between the first & last post within that year.
@@ -60,5 +60,134 @@ group by user_id
 having count(user_id) >= 2;
 ```
 
+## Question 2 (IMPORATANT)
 
-> 💡 Feel free to ⭐ this repo if you find these questions helpful!
+**Scenario:** E-commerce Conversion Funnel Analysis
+
+**Context:** You are analyzing user behavior for an e-commerce platform. Marketing wants to understand conversion rates at each stage of the purchase funnel for the month of January 2026.
+
+**Task:** 
+Write a query to calculate funnel metrics for each day in January 2026.
+1. Number of unique users who viewed any page
+2. Number of unique users who viewed a product page
+3. Number of unique users who added to cart
+4. Number of unique users who completed a purchase
+5. Overall conversion rate (purchasers / page viewers)
+
+**Input Tables:**
+
+**Table: `events`**
+```
+| event_id | user_id | event_type | event_timestamp | product_id | amount |
+|----------|---------|------------|-----------------|------------|--------|
+| 1        | 101     | view       | 2026-01-05 10:00:00 | 50         | NULL   |
+| 2        | 102     | view       | 2026-01-05 10:05:00 | 51         | NULL   |
+| 3        | 101     | add_to_cart| 2026-01-05 10:10:00 | 50         | NULL   |
+| 4        | 103     | view       | 2026-01-05 10:15:00 | 52         | NULL   |
+| 5        | 101     | purchase   | 2026-01-05 10:20:00 | 50         | 99.99  |
+| 6        | 102     | add_to_cart| 2026-01-05 10:25:00 | 51         | NULL   |
+| 7        | 104     | view       | 2026-01-06 09:00:00 | 53         | NULL   |
+| 8        | 102     | purchase   | 2026-01-06 09:30:00 | 51         | 49.99  |
+| 9        | 103     | purchase   | 2026-01-06 11:00:00 | 52         | 199.99 |
+| 10       | 105     | view       | 2026-01-07 14:00:00 | 54         | NULL   |
+| 11       | 105     | add_to_cart| 2026-01-07 14:15:00 | 54         | NULL   |
+| 12       | 105     | purchase   | 2026-01-07 14:30:00 | 54         | 75.00  |
+```
+
+**Table: `products`**
+```
+| product_id | product_name | category |
+|------------|--------------|----------|
+| 50         | Wireless Headphones | Electronics |
+| 51         | Mechanical Keyboard | Electronics |
+| 52         | Leather Wallet | Accessories |
+| 53         | Running Shoes | Footwear |
+| 54         | Smart Watch | Electronics |
+```
+
+**Expected Output:**
+```
+| date       | views | add_to_carts | purchases | view_to_cart_rate | cart_to_purchase_rate | overall_conversion_rate |
+|------------|-------|--------------|-----------|---------------------|-------------------------|-------------------------|
+| 2026-01-05 | 3     | 2            | 1         | 66.67%              | 100.00%                 | 33.33%                  |
+| 2026-01-06 | 1     | 1            | 2         | 100.00%             | 100.00%                 | 200.00%                 |
+| 2026-01-07 | 1     | 1            | 1         | 100.00%             | 100.00%                 | 100.00%                 |
+```
+
+**Create and Insert Statement:**
+```sql
+CREATE TABLE page_views (
+    user_id INT,
+    page_type VARCHAR(20),  -- 'home', 'product', 'cart'
+    view_timestamp TIMESTAMP
+);
+CREATE TABLE purchases (
+    user_id INT,
+    purchase_id INT PRIMARY KEY,
+    purchase_timestamp TIMESTAMP,
+    revenue DECIMAL(10,2)
+);
+INSERT INTO page_views (user_id, page_type, view_timestamp) VALUES
+(1, 'home',    '2026-01-15 09:00:00'),
+(1, 'product', '2026-01-15 09:05:00'),
+(1, 'cart',    '2026-01-15 09:10:00'),
+(2, 'home',    '2026-01-15 10:00:00'),
+(2, 'product', '2026-01-15 10:05:00'),
+(3, 'home',    '2026-01-15 11:00:00'),
+(3, 'product', '2026-01-15 11:03:00'),
+(3, 'cart',    '2026-01-15 11:08:00'),
+(4, 'home',    '2026-01-16 08:30:00'),
+(4, 'product', '2026-01-16 08:35:00'),
+(5, 'home',    '2026-01-16 09:00:00'),
+(6, 'home',    '2026-01-17 09:00:00'),
+(6, 'product', '2026-01-17 09:05:00'),
+(6, 'cart',    '2026-01-17 09:10:00'),
+(6, 'purchase', '2026-01-17 09:15:00');
+
+INSERT INTO purchases (user_id, purchase_id, purchase_timestamp, revenue) VALUES
+(1, 1001, '2026-01-15 09:15:00', 120.00),
+(3, 1002, '2026-01-15 11:15:00', 75.50),
+(4, 1003, '2026-01-16 08:50:00', 200.00),
+(6, 1004, '2026-01-17 09:15:00', 120.00);
+```
+
+**Solution:**
+```sql
+select * from page_views;
+select * from purchases;
+
+with daily_analysis as 
+(
+  select
+  user_id,
+  extract(day from view_timestamp) as day,
+  max(case when page_type = 'product' then 1 else 0 end) as viewed_product,
+  max(case when page_type = 'cart' then 1 else 0 end) as viewed_cart
+  from page_views
+  where extract(month from view_timestamp) = 01 and extract(year from view_timestamp) = 2026
+  group by 1,2
+),
+
+daily_purchases as 
+(
+  select
+  user_id,
+  extract(day from purchase_timestamp) as day
+  from purchases
+  where extract(month from purchase_timestamp) = 01 and extract(year from purchase_timestamp) = 2026
+  group by 1,2
+)
+
+select
+da.day,
+count(distinct da.user_id) as cnt_viewed_page,
+count(da.viewed_product) as cnt_veiwed_product,
+count(da.viewed_cart) as cnt_viewed_cart,
+count(distinct dp.user_id) as cnt_completed_purchases,
+round(count(distinct da.user_id)*1.0/count(distinct dp.user_id), 3) as conv_rate
+from daily_analysis as da
+left join daily_purchases as dp
+on da.user_id = dp.user_id
+and da.day = dp.day
+group by 1;
+```
