@@ -27,6 +27,34 @@ Link: https://leetcode.com/problems/orders-with-maximum-quantity-above-average/
 - `(order_id, product_id)` is the primary key (combination of columns with unique values) for this table.
 - Each row represents the quantity of a specific product within a given order.
 
+## Schema Setup
+
+```sql
+CREATE TABLE OrdersDetails (
+    order_id INT,
+    product_id INT,
+    quantity INT,
+    PRIMARY KEY (order_id, product_id)
+);
+
+INSERT INTO OrdersDetails (order_id, product_id, quantity)
+VALUES
+    (1, 1, 12),
+    (1, 2, 10),
+    (1, 3, 15),
+    (2, 1, 8),
+    (2, 4, 4),
+    (2, 5, 6),
+    (3, 3, 5),
+    (3, 4, 18),
+    (3, 9, 20),
+    (4, 5, 2),
+    (4, 6, 8),
+    (5, 7, 9),
+    (5, 8, 9),
+    (2, 9, 4);
+```
+
 ## Example
 
 ### Input
