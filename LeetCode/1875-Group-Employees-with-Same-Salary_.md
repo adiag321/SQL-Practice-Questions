@@ -28,6 +28,25 @@ Link: https://leetcode.com/problems/group-employees-of-the-same-salary/
 - `employee_id` is the primary key (column with unique values) for this table.
 - Each row of this table indicates the employee ID, employee name, and salary.
 
+## Schema Setup
+
+```sql
+CREATE TABLE Employees (
+    employee_id INT PRIMARY KEY,
+    name VARCHAR(50),
+    salary INT
+);
+
+INSERT INTO Employees (employee_id, name, salary)
+VALUES
+    (2, 'Meir', 3000),
+    (3, 'Michael', 3000),
+    (7, 'Adber', 7000),
+    (8, 'Juan', 6000),
+    (9, 'Alber', 7000),
+    (11, 'Alice', 8000);
+```
+
 ## Example
 
 ### Input
