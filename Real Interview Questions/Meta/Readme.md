@@ -60,6 +60,8 @@ group by user_id
 having count(user_id) >= 2;
 ```
 
+---
+
 ## Question 2 (IMPORATANT)
 
 **Scenario:** E-commerce Conversion Funnel Analysis
@@ -190,4 +192,59 @@ left join daily_purchases as dp
 on da.user_id = dp.user_id
 and da.day = dp.day
 group by 1;
+```
+
+---
+
+## Question 3: By Exponent (IMPORTANT)
+**Task:** Find the users who called three or more distinct people in the last week, along with the number of distinct people they called.
+
+**Input Table:**
+
+```
+| user_id | receiver_id | call_date  |
+|---------|-------------|------------|
+| 1       | 2           | 2026-04-07 |
+| 1       | 3           | 2026-04-08 |
+| 1       | 4           | 2026-04-09 |
+| 2       | 1           | 2026-04-10 |
+| 2       | 3           | 2026-04-11 |
+| 3       | 1           | 2026-04-12 |
+| 3       | 2           | 2026-04-13 |
+| 3       | 4           | 2026-04-07 |
+| 3       | 5           | 2026-04-08 |
+| 3       | 6           | 2026-04-09 |
+```
+
+**Create and Insert Statement:**
+
+```sql
+CREATE TABLE caller_info (
+    user_id INT,
+    receiver_id INT,
+    call_date DATE
+);
+INSERT INTO caller_info (user_id, receiver_id, call_date) VALUES
+(1, 2, '2026-04-07'),
+(1, 3, '2026-04-08'),
+(1, 4, '2026-04-09'),
+(2, 1, '2026-04-10'),
+(2, 3, '2026-04-11'),
+(3, 1, '2026-04-12'),
+(3, 2, '2026-04-13'),
+(3, 4, '2026-04-07'),
+(3, 5, '2026-04-08'),
+(3, 6, '2026-04-09');
+```
+
+**Solution:**
+
+```sql
+select
+distinct user_id,
+count(distinct receiver_id) as num_of_calls
+from caller_info
+where call_date between current_date - interval '7 day' and current_date
+group by 1
+having count(distinct receiver_id) >= 3;
 ```
