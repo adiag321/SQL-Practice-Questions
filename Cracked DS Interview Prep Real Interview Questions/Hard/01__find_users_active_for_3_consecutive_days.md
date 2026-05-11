@@ -25,15 +25,6 @@ Find users who have been active for 3 or more consecutive days.
 | action_date | DATE |
 | action_type | TEXT |
 
-```sql
-CREATE TABLE user_actions (
-    id          INT PRIMARY KEY,
-    user_id     INT,
-    action_date DATE,
-    action_type TEXT
-);
-```
-
 ---
 
 #### Solution
