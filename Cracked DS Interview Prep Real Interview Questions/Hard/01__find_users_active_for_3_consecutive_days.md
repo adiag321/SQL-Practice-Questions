@@ -27,7 +27,7 @@ Find users who have been active for 3 or more consecutive days.
 
 ---
 
-#### Solution
+#### Solution 1
 
 ```sql
 -- Find users active 3+ consecutive days
@@ -44,6 +44,25 @@ SELECT
 FROM with_rn
 group by user_id, grp
 having count(grp) >=3;
+```
+
+##### Solution 2
+
+```sql
+WITH session_info AS (
+    SELECT
+        *,
+        LAG(session_date) OVER(PARTITION BY user_id ORDER BY session_date) AS day1,
+        LAG(session_date, 2) OVER(PARTITION BY user_id ORDER BY session_date) AS day2
+    FROM sessions
+)
+SELECT
+    SUM(CASE WHEN julianday(session_date) - julianday(day1) = 1 AND julianday(day1) - julianday(day2) = 1 THEN 1 ELSE 0 END)*100.00/(SELECT count(DISTINCT user_id) FROM sessions) AS three_consec_days
+FROM session_info
+WHERE day1 IS NOT NULL
+AND day2 IS NOT NULL
+AND julianday(session_date) - julianday(day1) = 1
+AND julianday(day1) - julianday(day2) = 1
 ```
 
 ---
