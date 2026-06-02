@@ -95,38 +95,38 @@ ORDER BY product_id, date;
 ## 2. Date & Time Functions
 
 ### MySQL
-| Scenario | Syntax | Short Example |
-| :--- | :--- | :--- |
-| **1. Extract Part from Date** | `EXTRACT(unit FROM date)` <br> *Shorthands:* `YEAR(date)`, `MONTH(date)`, `DAY(date)` | `SELECT EXTRACT(MONTH FROM '2026-05-22');`<br>`SELECT YEAR('2026-05-22');` |
-| **2. Format Part of Date** | `DATE_FORMAT(date, format_string)` | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m');` |
-| **3. Get Current Date** | `CURRENT_DATE()` or `CURDATE()` <br> `NOW()` or `CURRENT_TIMESTAMP()` | `SELECT CURRENT_DATE();`<br>`SELECT NOW();` |
-| **4. Date Differences** | `DATEDIFF(date1, date2)` *(date1 - date2 in days)*<br>`TIMESTAMPDIFF(unit, datetime1, datetime2)` | `SELECT DATEDIFF('2026-05-22', '2026-05-15');`<br>`SELECT TIMESTAMPDIFF(MONTH, '2026-01-01', '2026-05-01');` |
-| **5. Rolling / Moving Windows** | **Arithmetic:** `date + INTERVAL expr unit`<br>**Window:** `RANGE BETWEEN INTERVAL expr unit PRECEDING AND CURRENT ROW` | `SELECT '2026-05-22' + INTERVAL 7 DAY;`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | *Not native.* Simulated using:<br>`DATE_FORMAT(date, '%Y-%m-01')` or `STR_TO_DATE(...)` | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m-01');`<br>`SELECT DATE_FORMAT('2026-05-22', '%Y-01-01');` |
+| Scenario | Short Example |
+| :--- | :--- |
+| **1. Extract Part from Date** | `SELECT EXTRACT(MONTH FROM '2026-05-22');`<br>`SELECT YEAR('2026-05-22');` |
+| **2. Format Part of Date** | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m');` |
+| **3. Get Current Date** | `SELECT CURRENT_DATE();`<br>`SELECT NOW();` |
+| **4. Date Differences** | `SELECT DATEDIFF('2026-05-22', '2026-05-15');`<br>`SELECT TIMESTAMPDIFF(MONTH, '2026-01-01', '2026-05-01');` |
+| **5. Rolling / Moving Windows** | `SELECT '2026-05-22' + INTERVAL 7 DAY;`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW)` |
+| **6. DATE_TRUNC (Truncation)** | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m-01');`<br>`SELECT DATE_FORMAT('2026-05-22', '%Y-01-01');` |
 
 ---
 
 ### PostgreSQL
-| Scenario | Syntax | Short Example |
-| :--- | :--- | :--- |
-| **1. Extract Part from Date** | `EXTRACT(field FROM source)` <br> `date_part('field', source)` | `SELECT EXTRACT(MONTH FROM DATE '2026-05-22');`<br>`SELECT date_part('year', TIMESTAMP '2026-05-22');` |
-| **2. Format Part of Date** | `TO_CHAR(source, format_string)` | `SELECT TO_CHAR(TIMESTAMP '2026-05-22', 'YYYY-MM');` |
-| **3. Get Current Date** | `CURRENT_DATE`<br>`CURRENT_TIMESTAMP` or `NOW()` | `SELECT CURRENT_DATE;`<br>`SELECT NOW();` |
-| **4. Date Differences** | `date1 - date2` *(returns days as integer)*<br>`AGE(timestamp1, timestamp2)` *(returns human-readable interval)* | `SELECT DATE '2026-05-22' - DATE '2026-05-15';`<br>`SELECT AGE(TIMESTAMP '2026-05-22', TIMESTAMP '2026-01-01');` |
-| **5. Rolling / Moving Windows** | **Arithmetic:** `date + INTERVAL 'expr unit'`<br>**Window:** `RANGE BETWEEN INTERVAL 'expr unit' PRECEDING AND CURRENT ROW` | `SELECT DATE '2026-05-22' + INTERVAL '7 days';`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | `DATE_TRUNC('field', source)` | `SELECT DATE_TRUNC('month', DATE '2026-05-22');`<br>`SELECT DATE_TRUNC('year', DATE '2026-05-22');` |
+| Scenario | Short Example |
+| :--- | :--- |
+| **1. Extract Part from Date** | `SELECT EXTRACT(MONTH FROM DATE '2026-05-22');`<br>`SELECT date_part('year', TIMESTAMP '2026-05-22');` |
+| **2. Format Part of Date** | `SELECT TO_CHAR(TIMESTAMP '2026-05-22', 'YYYY-MM');` |
+| **3. Get Current Date** | `SELECT CURRENT_DATE;`<br>`SELECT NOW();` |
+| **4. Date Differences** | `SELECT DATE '2026-05-22' - DATE '2026-05-15';`<br>`SELECT AGE(TIMESTAMP '2026-05-22', TIMESTAMP '2026-01-01');` |
+| **5. Rolling / Moving Windows** | `SELECT DATE '2026-05-22' + INTERVAL '7 days';`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW)` |
+| **6. DATE_TRUNC (Truncation)** | `SELECT DATE_TRUNC('month', DATE '2026-05-22');`<br>`SELECT DATE_TRUNC('year', DATE '2026-05-22');` |
 
 ---
 
 ### SQLite
-| Scenario | Syntax | Short Example |
-| :--- | :--- | :--- |
-| **1. Extract Part from Date** | `strftime(format, date)` <br> *Shorthand:* `unixepoch(date)` *(for unix timestamp)* | `SELECT strftime('%m', '2026-05-22');`<br>`SELECT CAST(strftime('%Y', '2026-05-22') AS INTEGER);` |
-| **2. Format Part of Date** | `strftime(format, date)` | `SELECT strftime('%Y-%m', '2026-05-22');` |
-| **3. Get Current Date** | `date('now')` or `CURRENT_DATE`<br>`datetime('now')` or `CURRENT_TIMESTAMP` | `SELECT date('now');`<br>`SELECT datetime('now');` |
-| **4. Date Differences** | `julianday(date1) - julianday(date2)` *(returns fractional days)*<br>`unixepoch(date1) - unixepoch(date2)` *(seconds difference)* | `SELECT julianday('2026-05-22') - julianday('2026-05-15');`<br>`SELECT unixepoch('2026-05-22') - unixepoch('2026-05-15');` |
-| **5. Rolling / Moving Windows** | **Arithmetic:** `date(date, 'value unit')`<br>**Window:** Convert dates to integer epochs and use `RANGE BETWEEN seconds PRECEDING AND CURRENT ROW` | `SELECT date('2026-05-22', '+7 days');`<br>`AVG(val) OVER(ORDER BY unixepoch(dt) RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | *Not native.* Simulated using:<br>`date(date, 'start of month')` or `strftime('%Y-%m-01', date)` | `SELECT date('2026-05-22', 'start of month');`<br>`SELECT date('2026-05-22', 'start of year');` |
+| Scenario | Short Example |
+| :--- | :--- |
+| **1. Extract Part from Date** | `SELECT strftime('%m', '2026-05-22');`<br>`SELECT CAST(strftime('%Y', '2026-05-22') AS INTEGER);` |
+| **2. Format Part of Date** | `SELECT strftime('%Y-%m', '2026-05-22');` |
+| **3. Get Current Date** | `SELECT date('now');`<br>`SELECT datetime('now');` |
+| **4. Date Differences** | `SELECT julianday('2026-05-22') - julianday('2026-05-15');`<br>`SELECT unixepoch('2026-05-22') - unixepoch('2026-05-15');` |
+| **5. Rolling / Moving Windows** | `SELECT date('2026-05-22', '+7 days');`<br>`AVG(val) OVER(ORDER BY unixepoch(dt) RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW)` |
+| **6. DATE_TRUNC (Truncation)** | `SELECT date('2026-05-22', 'start of month');`<br>`SELECT date('2026-05-22', 'start of year');` |
 
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
@@ -146,16 +146,6 @@ GROUP BY month, product_id;
 
 #### 2. Cohort Purchase Differences (Within 30 Days)
 ```sql
--- PostgreSQL
-WITH ranked_orders AS (
-    SELECT user_id, order_date,
-           DENSE_RANK() OVER(PARTITION BY user_id ORDER BY order_date) AS rnk,
-           LAG(order_date) OVER(PARTITION BY user_id ORDER BY order_date) AS prev_order
-    FROM orders
-)
-SELECT * FROM ranked_orders
-WHERE rnk = 2 AND order_date - prev_order <= 30;
-
 -- MySQL
 WITH ranked_orders AS (
     SELECT user_id, order_date,
@@ -165,6 +155,16 @@ WITH ranked_orders AS (
 )
 SELECT * FROM ranked_orders
 WHERE rnk = 2 AND DATEDIFF(order_date, prev_order) <= 30;
+
+-- PostgreSQL
+WITH ranked_orders AS (
+    SELECT user_id, order_date,
+           DENSE_RANK() OVER(PARTITION BY user_id ORDER BY order_date) AS rnk,
+           LAG(order_date) OVER(PARTITION BY user_id ORDER BY order_date) AS prev_order
+    FROM orders
+)
+SELECT * FROM ranked_orders
+WHERE rnk = 2 AND order_date - prev_order <= 30;
 
 -- SQLite
 WITH ranked_orders AS (
@@ -302,27 +302,23 @@ WHERE rw_nm <= 2;
 <summary><b>View Join Examples</b></summary>
 
 ```sql
--- 1. Anti-Join via NOT IN: Pages with zero likes (Facebook)
--- File: 30_Days_SQL_Challenge/02.sql
+-- 1. Anti-Join via NOT IN: Pages with zero likes (Facebook) File: 30_Days_SQL_Challenge/02.sql
 SELECT p.page_id
 FROM pages p
 WHERE p.page_id NOT IN (SELECT DISTINCT page_id FROM page_likes);
 
--- 2. Anti-Join via LEFT JOIN: Pages with zero likes (Facebook)
--- File: 30_Days_SQL_Challenge/02.sql
+-- 2. Anti-Join via LEFT JOIN: Pages with zero likes (Facebook) File: 30_Days_SQL_Challenge/02.sql
 SELECT p.page_id
 FROM pages p
 LEFT JOIN page_likes pl ON p.page_id = pl.page_id
 WHERE pl.page_id IS NULL;
 
--- 3. Self-Join via LEFT JOIN: Manager-Employee hierarchy (TCS)
--- File: 30_Days_SQL_Challenge/22.sql
+-- 3. Self-Join via LEFT JOIN: Manager-Employee hierarchy (TCS) File: 30_Days_SQL_Challenge/22.sql
 SELECT e1.emp_id, e1.emp_name, e2.emp_name AS manager_name
 FROM employees e1
 LEFT JOIN employees e2 ON e1.manager_id = e2.emp_id;
 
--- 4. CROSS JOIN: Manager-Employee lookup (TCS)
--- File: 30_Days_SQL_Challenge/22.sql
+-- 4. CROSS JOIN: Manager-Employee lookup (TCS) File: 30_Days_SQL_Challenge/22.sql
 -- CROSS JOIN produces a Cartesian product. When filtered with WHERE, it acts like an INNER JOIN.
 -- Useful when you want every combination and then narrow down with a condition.
 SELECT e1.emp_id, e1.emp_name, e1.manager_id, e2.emp_name AS manager_name
@@ -330,8 +326,7 @@ FROM employees AS e1
 CROSS JOIN employees AS e2
 WHERE e1.manager_id = e2.emp_id;
 
--- 5. Running Total Self-Join (alternative to window function) (Flipkart)
--- File: 30_Days_SQL_Challenge/25.sql
+-- 5. Running Total Self-Join (alternative to window function) (Flipkart) File: 30_Days_SQL_Challenge/25.sql
 SELECT o1.date, o1.product_id, o1.product_name, o1.revenue,
        SUM(o2.revenue) AS running_total
 FROM orders AS o1
