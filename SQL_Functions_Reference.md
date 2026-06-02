@@ -1,8 +1,6 @@
 # SQL Functions Reference Guide
-> **30_Days_SQL_Challenge** — Quick Reference & Interview Patterns (Amazon, Uber, IBM, Facebook, Flipkart & more)
 
 ## 1. Window Functions
-*Compute values across a set of rows related to the current row without collapsing them.*
 
 ### Ranking Functions
 | Function | Syntax | Ties Handling |
@@ -15,7 +13,7 @@
 <summary><b>View Ranking Examples</b></summary>
 
 ```sql
--- 1. Find the 3rd transaction of every user (Uber - 05.sql)
+-- 1. ROW_NUMBER: Find the 3rd transaction of every user (Uber) File: 30_Days_SQL_Challenge/05.sql
 SELECT user_id, spend, transaction_date
 FROM (
     SELECT user_id, spend, transaction_date,
@@ -24,7 +22,7 @@ FROM (
 ) x1
 WHERE rn = 3;
 
--- 2. Find top 3 salary earners in each department (LeetCode - 09.sql)
+-- 2. DENSE_RANK: Top 3 salary earners in each department (LeetCode) File: 30_Days_SQL_Challenge/09.sql
 SELECT department_name, emp_name, salary
 FROM (
     SELECT d.name AS department_name, e.name AS emp_name, e.salary,
@@ -33,6 +31,18 @@ FROM (
     JOIN department d ON e.departmentId = d.id
 ) x1
 WHERE drn <= 3;
+
+-- 3. RANK: First year each product was sold (Walmart) File: 30_Days_SQL_Challenge/29.sql
+SELECT product_id, first_year, quantity, price
+FROM (
+    SELECT product_id,
+           year AS first_year,
+           quantity,
+           price,
+           RANK() OVER(PARTITION BY product_id ORDER BY year) AS rn
+    FROM sales
+) AS temp
+WHERE rn = 1;
 ```
 </details>
 
@@ -48,7 +58,7 @@ WHERE drn <= 3;
 <summary><b>View Value/Analytics Examples</b></summary>
 
 ```sql
--- 1. Compare product revenue to previous year (Amazon - 05.sql)
+-- 1. LAG: Compare product revenue to previous year (Amazon) File: 30_Days_SQL_Challenge/05.sql
 WITH prev_rev AS (
     SELECT *,
         LAG(revenue) OVER(PARTITION BY product_name ORDER BY year) AS prev_year_revenue
@@ -59,7 +69,7 @@ SELECT product_name, revenue AS current_year_revenue, prev_year_revenue,
 FROM prev_rev
 WHERE prev_year_revenue > revenue;
 
--- 2. 3-day moving average of sales (General pattern)
+-- 2. Moving Average: 3-day rolling average (General pattern)
 SELECT order_date, amount,
        AVG(amount) OVER(
            PARTITION BY user_id
@@ -67,6 +77,16 @@ SELECT order_date, amount,
            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
        ) AS moving_avg_3day
 FROM orders;
+
+-- 3. Running Total (Cumulative SUM): Revenue per product over time (Flipkart)  File: 30_Days_SQL_Challenge/25.sql
+SELECT
+    date,
+    product_id,
+    product_name,
+    revenue,
+    SUM(revenue) OVER (PARTITION BY product_id ORDER BY date) AS running_total
+FROM orders
+ORDER BY product_id, date;
 ```
 </details>
 
@@ -111,10 +131,7 @@ FROM orders;
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
 
-Here is how common real-world interview problems are solved using these different dialect approaches:
-
 #### 1. Extracting Month/Year
-*Extracting components from dates for grouping and filtering.*
 ```sql
 -- MySQL / PostgreSQL (standard EXTRACT)
 SELECT EXTRACT(MONTH FROM submit_date) AS month, product_id, ROUND(AVG(stars), 2) AS avg_rating
@@ -128,7 +145,6 @@ GROUP BY month, product_id;
 ```
 
 #### 2. Cohort Purchase Differences (Within 30 Days)
-*Finding records that happen within a certain time window of a previous event.*
 ```sql
 -- PostgreSQL
 WITH ranked_orders AS (
@@ -165,7 +181,6 @@ WHERE rnk = 2 AND julianday(order_date) - julianday(prev_order) <= 30;
 ---
 
 ## 3. Aggregate & Conditional Functions
-*Summarize data groups and execute branching (if-else) logic.*
 
 | Function | Key Concept / Purpose | Key Rule |
 | :--- | :--- | :--- |
@@ -195,7 +210,6 @@ HAVING COUNT(1) > 1;
 ---
 
 ## 4. NULL Handling & Math Functions
-*Clean missing records, prevent errors (like division-by-zero), and format calculations.*
 
 | Function / Technique | Syntax / Pattern | Purpose |
 | :--- | :--- | :--- |
@@ -224,7 +238,6 @@ FROM order_summary;
 ---
 
 ## 5. String & Formatting Functions
-*Sleek text transformations and matching pattern techniques.*
 
 | Function | Purpose | Example | Result |
 | :--- | :--- | :--- | :--- |
@@ -238,7 +251,6 @@ FROM order_summary;
 ---
 
 ## 6. CTEs & Subquery Patterns
-*Simplify nested architectures into clean, modular query layers.*
 
 ### Common Table Expression (CTE) Template
 ```sql
@@ -252,8 +264,8 @@ SELECT * FROM second_step WHERE rnk = 1;
 ```
 
 ### Essential Subquery Patterns
-- **Anti-Join:** `WHERE col NOT IN (SELECT DISTINCT col FROM table)` (filters out matches)
-- **Derived Table:** `SELECT * FROM (SELECT ... ) x1` (always alias nested subqueries in `FROM`)
+- **Anti-Join:** `WHERE col NOT IN (SELECT DISTINCT col FROM table)` 
+- **Derived Table:** `SELECT * FROM (SELECT ... ) x1` 
 - **Scalar Lookup:** `WHERE spend = (SELECT MAX(spend) FROM table)`
 
 <details>
@@ -281,7 +293,6 @@ WHERE rw_nm <= 2;
 ---
 
 ## 7. Join Patterns
-*Combine datasets accurately based on relation models.*
 
 - **Anti-Join (`LEFT JOIN ... WHERE B.col IS NULL`):** Find non-matching records (e.g. users who never purchased).
 - **Self-Join (`JOIN` a table to itself):** Query hierarchies (manager/employee) or compare sequential rows.
@@ -291,25 +302,49 @@ WHERE rw_nm <= 2;
 <summary><b>View Join Examples</b></summary>
 
 ```sql
--- 1. Anti-Join: Pages with zero likes (Facebook - 02.sql)
+-- 1. Anti-Join via NOT IN: Pages with zero likes (Facebook)
+-- File: 30_Days_SQL_Challenge/02.sql
+SELECT p.page_id
+FROM pages p
+WHERE p.page_id NOT IN (SELECT DISTINCT page_id FROM page_likes);
+
+-- 2. Anti-Join via LEFT JOIN: Pages with zero likes (Facebook)
+-- File: 30_Days_SQL_Challenge/02.sql
 SELECT p.page_id
 FROM pages p
 LEFT JOIN page_likes pl ON p.page_id = pl.page_id
 WHERE pl.page_id IS NULL;
 
--- 2. Self-Join: Manager-Employee hierarchy lookup (TCS - 22.sql)
-SELECT e1.emp_name AS employee, e2.emp_name AS manager
+-- 3. Self-Join via LEFT JOIN: Manager-Employee hierarchy (TCS)
+-- File: 30_Days_SQL_Challenge/22.sql
+SELECT e1.emp_id, e1.emp_name, e2.emp_name AS manager_name
 FROM employees e1
 LEFT JOIN employees e2 ON e1.manager_id = e2.emp_id;
+
+-- 4. CROSS JOIN: Manager-Employee lookup (TCS)
+-- File: 30_Days_SQL_Challenge/22.sql
+-- CROSS JOIN produces a Cartesian product. When filtered with WHERE, it acts like an INNER JOIN.
+-- Useful when you want every combination and then narrow down with a condition.
+SELECT e1.emp_id, e1.emp_name, e1.manager_id, e2.emp_name AS manager_name
+FROM employees AS e1
+CROSS JOIN employees AS e2
+WHERE e1.manager_id = e2.emp_id;
+
+-- 5. Running Total Self-Join (alternative to window function) (Flipkart)
+-- File: 30_Days_SQL_Challenge/25.sql
+SELECT o1.date, o1.product_id, o1.product_name, o1.revenue,
+       SUM(o2.revenue) AS running_total
+FROM orders AS o1
+JOIN orders AS o2
+    ON o1.product_id = o2.product_id AND o1.date >= o2.date
+GROUP BY o1.date, o1.product_id, o1.product_name, o1.revenue
+ORDER BY 1, 2;
 ```
 </details>
 
 ---
 
 ## 8. Median — Classic Interview Pattern
-*Standard SQL lacks a native `MEDIAN()` function. Use the double `ROW_NUMBER()` ascending/descending difference trick.*
-
-**Logic:** The median row has absolute difference between its ascending and descending rank $\le 1$ (handles both odd and even counts).
 
 ```sql
 WITH ranked_cte AS (
@@ -323,3 +358,110 @@ FROM ranked_cte
 WHERE ABS(rn_asc - rn_desc) <= 1;
 ```
 **File:** `30_Days_SQL_Challenge/16.sql` — TikTok Interview Question
+
+---
+
+## 9. LIMIT / TOP / FETCH FIRST — Restricting Result Rows
+
+| Dialect | Syntax | Notes |
+| :--- | :--- | :--- |
+| **MySQL** | `SELECT ... LIMIT n;` | Most common shorthand |
+| **MySQL (offset)** | `SELECT ... LIMIT offset, n;` | Skip `offset` rows, return `n` |
+| **PostgreSQL** | `SELECT ... LIMIT n;` | Same as MySQL |
+| **PostgreSQL (standard)** | `SELECT ... FETCH FIRST n ROWS ONLY;` | SQL standard syntax |
+| **SQLite** | `SELECT ... LIMIT n;` | Same as MySQL |
+| **SQL Server** | `SELECT TOP n ...;` | Goes **before** column list, not at end |
+| **Oracle** | `WHERE ROWNUM <= n` | Filter-based, must wrap sorted subquery |
+
+<details>
+<summary><b>View LIMIT / TOP Examples</b></summary>
+
+```sql
+-- 1. MySQL / PostgreSQL / SQLite — Top 5 products by revenue decrease (Amazon) File: 30_Days_SQL_Challenge/05.sql
+SELECT product_name, revenue_decreased, rev_decreased_ratio
+FROM rev_comp
+WHERE revenue_decreased > 0
+LIMIT 5;
+
+-- 2. PostgreSQL — Top 5 customers by return percentage (Amazon) File: 30_Days_SQL_Challenge/26.sql
+SELECT customer_id, return_percentage
+FROM result_cte
+ORDER BY return_percentage DESC
+LIMIT 5;
+
+-- 3. MySQL / PostgreSQL / SQLite — Top 5 songs by listen count (Spotify) File: 30_Days_SQL_Challenge/30.sql
+SELECT song_name, times_of_listens
+FROM (
+    SELECT s.song_name, COUNT(l.listen_id) AS times_of_listens
+    FROM Songs s
+    JOIN Listens l ON s.song_id = l.song_id
+    GROUP BY s.song_name
+) AS sub
+ORDER BY times_of_listens DESC
+LIMIT 5;
+
+-- 4. PostgreSQL — FETCH FIRST (SQL standard equivalent of LIMIT) File: 30_Days_SQL_Challenge/28.sql
+SELECT seller_id, total_sales, total_return_qty
+FROM result_cte
+ORDER BY total_sales DESC, total_return_qty ASC
+FETCH FIRST 3 ROWS ONLY;
+
+-- 5. SQL Server equivalent (TOP goes at the start)
+SELECT TOP 5 song_name, times_of_listens
+FROM sub
+ORDER BY times_of_listens DESC;
+```
+</details>
+
+---
+
+## 10. CAST & Type Casting
+
+### Dialect Comparison
+| Dialect | Syntax | Use Case |
+| :--- | :--- | :--- |
+| **Standard SQL** | `CAST(col AS type)` | Universal — works in all dialects |
+| **PostgreSQL shorthand** | `col::type` | Cleaner syntax, PostgreSQL-only |
+| **MySQL** | `CAST(col AS DECIMAL)` or `col * 1.0` | No `::` shorthand |
+| **SQLite** | `CAST(col AS REAL)` or `col * 1.0` | No `::` shorthand |
+
+### Common Target Types
+| Type | Purpose |
+| :--- | :--- |
+| `FLOAT` / `REAL` | Force decimal division (avoid integer truncation) |
+| `NUMERIC(p, s)` | Precise decimal with precision and scale |
+| `VARCHAR` / `TEXT` | Convert number/date to string |
+| `DATE` | Convert string literal to a date |
+| `INTEGER` | Truncate float to whole number |
+
+<details>
+<summary><b>View CAST / Type Casting Examples</b></summary>
+
+```sql
+-- 1. PostgreSQL :: shorthand — Cast string literal to DATE for date arithmetic (Flipkart) File: 30_Days_SQL_Challenge/15.sql
+WHERE EXTRACT(MONTH FROM saledate) = EXTRACT(MONTH FROM '2024-03-01'::DATE) - 1
+
+-- 2. PostgreSQL :: shorthand — Cast to FLOAT to avoid integer division (Amazon) File: 30_Days_SQL_Challenge/26.sql
+ROUND(
+    CASE
+        WHEN total_items_ordered > 0
+        THEN (total_items_returned::FLOAT / total_items_ordered::FLOAT) * 100
+        ELSE 0
+    END::NUMERIC, 2
+) AS return_percentage
+
+-- 3. Multiply by 1.0 — Universal float cast trick (Amazon) File: 30_Days_SQL_Challenge/26.sql
+ROUND((returned_items * 1.0 / total_items_ordered) * 100, 2) AS return_pct
+
+-- 4. Standard CAST() — Convert string to integer for year extraction (SQLite) File: General SQLite pattern for strftime results
+SELECT CAST(strftime('%Y', '2026-05-22') AS INTEGER) AS year_int;
+
+-- 5. CAST to NUMERIC for rounding — PostgreSQL File: 30_Days_SQL_Challenge/26.sql
+ROUND((some_float_result)::NUMERIC, 2)
+
+-- Dialect Quick Reference:
+-- MySQL/SQLite: col * 1.0   OR   CAST(col AS DECIMAL(10,2))
+-- PostgreSQL:   col::float  OR   CAST(col AS FLOAT)
+-- SQL Server:   CAST(col AS FLOAT)  OR  CONVERT(FLOAT, col)
+```
+</details>
