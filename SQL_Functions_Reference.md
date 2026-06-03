@@ -94,39 +94,15 @@ ORDER BY product_id, date;
 
 ## 2. Date & Time Functions
 
-### MySQL
-| Scenario | Short Example |
-| :--- | :--- |
-| **1. Extract Part from Date** | `SELECT EXTRACT(MONTH FROM '2026-05-22');`<br>`SELECT YEAR('2026-05-22');` |
-| **2. Format Part of Date** | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m');` |
-| **3. Get Current Date** | `SELECT CURRENT_DATE();`<br>`SELECT NOW();` |
-| **4. Date Differences** | `SELECT DATEDIFF('2026-05-22', '2026-05-15');`<br>`SELECT TIMESTAMPDIFF(MONTH, '2026-01-01', '2026-05-01');` |
-| **5. Rolling / Moving Windows** | `SELECT '2026-05-22' + INTERVAL 7 DAY;`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | `SELECT DATE_FORMAT('2026-05-22', '%Y-%m-01');`<br>`SELECT DATE_FORMAT('2026-05-22', '%Y-01-01');` |
-
----
-
-### PostgreSQL
-| Scenario | Short Example |
-| :--- | :--- |
-| **1. Extract Part from Date** | `SELECT EXTRACT(MONTH FROM DATE '2026-05-22');`<br>`SELECT date_part('year', TIMESTAMP '2026-05-22');` |
-| **2. Format Part of Date** | `SELECT TO_CHAR(TIMESTAMP '2026-05-22', 'YYYY-MM');` |
-| **3. Get Current Date** | `SELECT CURRENT_DATE;`<br>`SELECT NOW();` |
-| **4. Date Differences** | `SELECT DATE '2026-05-22' - DATE '2026-05-15';`<br>`SELECT AGE(TIMESTAMP '2026-05-22', TIMESTAMP '2026-01-01');` |
-| **5. Rolling / Moving Windows** | `SELECT DATE '2026-05-22' + INTERVAL '7 days';`<br>`AVG(val) OVER(ORDER BY dt RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | `SELECT DATE_TRUNC('month', DATE '2026-05-22');`<br>`SELECT DATE_TRUNC('year', DATE '2026-05-22');` |
-
----
-
-### SQLite
-| Scenario | Short Example |
-| :--- | :--- |
-| **1. Extract Part from Date** | `SELECT strftime('%m', '2026-05-22');`<br>`SELECT CAST(strftime('%Y', '2026-05-22') AS INTEGER);` |
-| **2. Format Part of Date** | `SELECT strftime('%Y-%m', '2026-05-22');` |
-| **3. Get Current Date** | `SELECT date('now');`<br>`SELECT datetime('now');` |
-| **4. Date Differences** | `SELECT julianday('2026-05-22') - julianday('2026-05-15');`<br>`SELECT unixepoch('2026-05-22') - unixepoch('2026-05-15');` |
-| **5. Rolling / Moving Windows** | `SELECT date('2026-05-22', '+7 days');`<br>`AVG(val) OVER(ORDER BY unixepoch(dt) RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW)` |
-| **6. DATE_TRUNC (Truncation)** | `SELECT date('2026-05-22', 'start of month');`<br>`SELECT date('2026-05-22', 'start of year');` |
+| Scenario | MySQL | PostgreSQL | SQLite |
+| :--- | :--- | :--- | :--- |
+| **1. Extract Part from Date** | `EXTRACT(MONTH FROM date)`<br>`YEAR(date)`, `MONTH(date)`, `DAY(date)` | `EXTRACT(MONTH FROM DATE '...')`<br>`date_part('year', TIMESTAMP '...')` | `strftime('%m', date)`<br>`CAST(strftime('%Y', date) AS INTEGER)` |
+| **2. Format Part of Date** | `DATE_FORMAT(date, '%Y-%m')` | `TO_CHAR(TIMESTAMP '...', 'YYYY-MM')` | `strftime('%Y-%m', date)` |
+| **3. Get Current Date** | `CURRENT_DATE()` / `CURDATE()`<br>`NOW()` / `CURRENT_TIMESTAMP()` | `CURRENT_DATE`<br>`NOW()` / `CURRENT_TIMESTAMP` | `date('now')` / `CURRENT_DATE`<br>`datetime('now')` / `CURRENT_TIMESTAMP` |
+| **4. Date Differences** | `DATEDIFF(date1, date2)` *(days)*<br>`TIMESTAMPDIFF(MONTH, d1, d2)` | `date1 - date2` *(integer days)*<br>`AGE(ts1, ts2)` *(interval)* | `julianday(d1) - julianday(d2)` *(fractional days)*<br>`unixepoch(d1) - unixepoch(d2)` *(seconds)* |
+| **5. Date Arithmetic** | `date + INTERVAL 7 DAY` | `date + INTERVAL '7 days'` | `date(date, '+7 days')` |
+| **6. Rolling Window (Range)** | `RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW` | `RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW` | `RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW` *(use unixepoch)* |
+| **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | `date(date, 'start of month')`<br>`date(date, 'start of year')` |
 
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
