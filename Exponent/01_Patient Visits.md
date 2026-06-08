@@ -1,39 +1,25 @@
 ## Patient Visits
 
-Exponent Link: [https://www.tryexponent.com/practice/prepare/patient-visits](https://www.tryexponent.com/practice/prepare/patient-visits)
-
-#### Tables Used
-
-**`provider`**
-
-| Column | Type |
-|--------|------|
-| provider_id | INTEGER |
-| provider_specialty | VARCHAR |
-
-**`patient`**
-
-| Column | Type |
-|--------|------|
-| patient_id | INTEGER |
-| patient_name | VARCHAR |
-| sex | INTEGER |
-| age | INTEGER |
-
-**`visit`**
-
-| Column | Type |
-|--------|------|
-| provider_id | INTEGER |
-| patient_id | INTEGER |
-| is_visit_referral | INTEGER |
-| visit_date | TIMESTAMP |
+| Attribute | Detail |
+|-----------|--------|
+| **Difficulty** | Medium |
+| **Link** | https://www.tryexponent.com/practice/prepare/patient-visits |
 
 ---
 
-#### Schema & Data Setup
+#### Problem Statement
+
+You are given a healthcare database with three tables: `provider`, `patient`, and `visit`. Providers have specialties, patients have demographic information, and visits link patients to providers with referral and date information.
+
+---
+
+#### Create & Insert Statements
 
 ```sql
+DROP TABLE IF EXISTS visit;
+DROP TABLE IF EXISTS patient;
+DROP TABLE IF EXISTS provider;
+
 CREATE TABLE provider (
     provider_id INTEGER,
     provider_specialty VARCHAR(50)
@@ -78,133 +64,158 @@ INSERT INTO visit (provider_id, patient_id, is_visit_referral, visit_date) VALUE
 ---
 
 #### Question 1
-Write a SQL query to list the number of patient visits, categorized by provider specialty. Output columns: `provider_specialty`, `total_visits`
+Write a SQL query to list the number of patient visits, categorized by provider specialty. Output columns: `provider_specialty`, `total_visits`.
 
 #### Solution
 ```sql
-select
-provider.provider_specialty,
-count(distinct visit.patient_id) as total_visit
-from visit 
-join provider
-on visit.provider_id = provider.provider_id
-group by 1;
+SELECT
+    provider.provider_specialty,
+    COUNT(DISTINCT visit.patient_id) AS total_visits
+FROM visit
+JOIN provider ON visit.provider_id = provider.provider_id
+GROUP BY 1;
 ```
+
+#### Sample Output
+
+| provider_specialty | total_visits |
+|--------------------|--------------|
+| Cardiology         | 1            |
+| Neurology          | 2            |
+| Pediatrics         | 1            |
 
 ---
 
 #### Question 2
-Write a SQL query to list the percentage of patients referred by each provider over the past 90 days. Output columns: `provider_specialty`, `referral_percentage`
+Write a SQL query to list the percentage of patients referred by each provider over the past 90 days. Output columns: `provider_specialty`, `referral_percentage`.
 
 #### Solution
 ```sql
-select
-round(sum(is_visit_referral)*100.00/count(*), 4)
-from visit
-where visit_date between date('2026-05-21')-90 and Date('2026-05-21');
+SELECT
+    ROUND(SUM(is_visit_referral) * 100.00 / COUNT(*), 4) AS referral_percentage
+FROM visit
+WHERE visit_date BETWEEN DATE('2026-05-21') - 90 AND DATE('2026-05-21');
 ```
+
+#### Sample Output
+
+| referral_percentage |
+|---------------------|
+| 50.0000             |
 
 ---
 
 #### Question 3
-Write a SQL query to list the most common sex of patients seen by each provider specialty, where sex is represented as 0 for female and 1 for male. Output column: `provider_specialty`, `majority_sex`, `majority_count`
+Write a SQL query to list the most common sex of patients seen by each provider specialty, where sex is represented as 0 for female and 1 for male. Output columns: `provider_specialty`, `majority_sex`, `majority_count`.
 
 #### Solution
 ```sql
-with gender_rnk as (select
-provider.provider_specialty,
-patient.sex as majority_sex,
-count(patient.sex) as majority_count,
-dense_rank() over(partition by provider.provider_specialty order by count(patient.sex)) as rnk
-from visit
-join provider
-on visit.provider_id = provider.provider_id
-join patient
-on visit.patient_id = patient.patient_id
-group by 1,2
+WITH gender_rnk AS (
+    SELECT
+        provider.provider_specialty,
+        patient.sex AS majority_sex,
+        COUNT(patient.sex) AS majority_count,
+        DENSE_RANK() OVER (PARTITION BY provider.provider_specialty ORDER BY COUNT(patient.sex)) AS rnk
+    FROM visit
+    JOIN provider ON visit.provider_id = provider.provider_id
+    JOIN patient ON visit.patient_id = patient.patient_id
+    GROUP BY 1, 2
 )
-select
-provider_specialty,
-case when majority_sex = 0 then 'female' else 'male' end as majority_sex,
-majority_count
-from gender_rnk
-where rnk = 1
-order by provider_specialty;
+SELECT
+    provider_specialty,
+    CASE WHEN majority_sex = 0 THEN 'female' ELSE 'male' END AS majority_sex,
+    majority_count
+FROM gender_rnk
+WHERE rnk = 1
+ORDER BY provider_specialty;
 ```
+
+#### Sample Output
+
+| provider_specialty | majority_sex | majority_count |
+|--------------------|--------------|----------------|
+| Cardiology         | female       | 1              |
+| Neurology          | female       | 1              |
+| Pediatrics         | male         | 1              |
 
 ---
 
 #### Question 4
-Write a SQL query to identify the most frequently seen neurologist (provider_specialty = neurology) for each patient over the past 3 months. Exclude patients with fewer than 3 visits to the same provider. Output column: `patient_id`, `provider_id`, `visit_count`
+Write a SQL query to identify the most frequently seen neurologist (provider_specialty = 'Neurology') for each patient over the past 3 months. Exclude patients with fewer than 3 visits to the same provider. Output columns: `patient_id`, `provider_id`, `visit_count`.
 
 #### Solution
 ```sql
 WITH FilteredVisits AS (
-    SELECT 
+    SELECT
         v.patient_id,
         v.provider_id,
         COUNT(*) AS visit_count
-    FROM 
-        visit v
-    JOIN 
-        provider p ON v.provider_id = p.provider_id
-    WHERE 
-        v.visit_date >= DATE('now', '-3 months')
-        AND p.provider_specialty = 'Neurology'   -- Filter for neurologists
-    GROUP BY 
-        v.patient_id, 
-        v.provider_id
-    HAVING 
-        COUNT(*) >= 3  -- Exclude providers with fewer than 3 visits
+    FROM visit v
+    JOIN provider p ON v.provider_id = p.provider_id
+    WHERE v.visit_date >= DATE('now', '-3 months')
+      AND p.provider_specialty = 'Neurology'
+    GROUP BY v.patient_id, v.provider_id
+    HAVING COUNT(*) >= 3
 ),
 RankedProviders AS (
-    SELECT 
+    SELECT
         fv.patient_id,
         fv.provider_id,
         fv.visit_count,
         ROW_NUMBER() OVER (PARTITION BY fv.patient_id ORDER BY fv.visit_count DESC) AS rn
-    FROM 
-        FilteredVisits fv
+    FROM FilteredVisits fv
 )
-SELECT 
-    patient_id, 
-    provider_id, 
+SELECT
+    patient_id,
+    provider_id,
     visit_count
-FROM 
-    RankedProviders
-WHERE 
-    rn = 1;  -- Select the most frequently seen neurologist for each patient
+FROM RankedProviders
+WHERE rn = 1;
 ```
+
+#### Sample Output
+
+| patient_id | provider_id | visit_count |
+|------------|-------------|-------------|
+| 2          | 2           | 3           |
 
 ---
 
-#### Question 5 (HARD)
-Write a SQL query to rank provider specialties by the fastest month-over-month growth in Medicare patients (ages over 10), comparing this month to last month. Output columns: `provider_specialty`, `monthly_growth`, `rank`
+#### Question 5 (Hard)
+Write a SQL query to rank provider specialties by the fastest month-over-month growth in Medicare patients (ages over 10), comparing this month to last month. Output columns: `provider_specialty`, `monthly_growth`, `rank`.
 
 #### Solution
 ```sql
-with cte1 as (select
-p.provider_specialty,
-strftime('%Y-%m', v.visit_date) as mnth_yr,
-count(*) as patients_seen
-from visit v
-join provider p
-on v.provider_id = p.provider_id
-join patient as pa
-on v.patient_id = pa.patient_id
-where pa.age>10
-group by 1,2
-order by 1,2
+WITH cte1 AS (
+    SELECT
+        p.provider_specialty,
+        STRFTIME('%Y-%m', v.visit_date) AS mnth_yr,
+        COUNT(*) AS patients_seen
+    FROM visit v
+    JOIN provider p ON v.provider_id = p.provider_id
+    JOIN patient pa ON v.patient_id = pa.patient_id
+    WHERE pa.age > 10
+    GROUP BY 1, 2
+    ORDER BY 1, 2
 ),
-grwth as (select
-*,
-coalesce(lag(patients_seen) over(partition by provider_specialty order by mnth_yr),0) as prev_mnth_patient_seen,
-(patients_seen - coalesce(lag(patients_seen) over(partition by provider_specialty order by mnth_yr),0)) as mom_growth
-from cte1
+grwth AS (
+    SELECT
+        *,
+        COALESCE(LAG(patients_seen) OVER (PARTITION BY provider_specialty ORDER BY mnth_yr), 0) AS prev_mnth_patient_seen,
+        (patients_seen - COALESCE(LAG(patients_seen) OVER (PARTITION BY provider_specialty ORDER BY mnth_yr), 0)) AS mom_growth
+    FROM cte1
 )
-select
-provider_specialty,
-mom_growth,
-dense_rank() over(partition by provider_specialty order by mom_growth desc) as rnk
-from grwth;
+SELECT
+    provider_specialty,
+    mom_growth,
+    DENSE_RANK() OVER (PARTITION BY provider_specialty ORDER BY mom_growth DESC) AS rnk
+FROM grwth;
 ```
+
+#### Sample Output
+
+| provider_specialty | mom_growth | rnk |
+|--------------------|------------|-----|
+| Cardiology         | 1          | 1   |
+| Neurology          | 3          | 1   |
+| Pediatrics         | 1          | 1   |
