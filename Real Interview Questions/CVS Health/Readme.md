@@ -2,26 +2,29 @@
 
 Consider the tables below and answer the following questions. Note that mem1 and mem2 splits the entire membership data into 2 tables
 
+```text
 mem1                                  mem2
 +---------------+---------+           +---------------+---------+
-| id            | int     |<----+---->| id            | int     |
-| gender_cd     | varchar |     |     | gender_cd     | varchar |
-| age_band      | varchar |     |     | age_band      | varchar |
-| zip_cd        | varchar |     |     | zip_cd        | varchar |
-+---------------+---------+     |     +---------------+---------+
-                                |      
-                                |  
-                                |    clm
-rsk                             |    +--------------------+---------+
-+---------------+---------+     |    | claim_id           | int     |
-| id            | int     |<----+--->| id                 | int     |
-| srv_start_dt  | date    |          | srv_start_dt       | date    |
-| retro_risk    | double  |          | paid_prvdr_par_cd  | varchar |
-| prosp_risk    | double  |          | srv_spclty_ctg_cd  | varchar |
- +--------------+---------+          | cost_ctg_short_nm  | varchar |
-                                     | paid_amt           | double  |
-                                     | billed_amt         | double  |
-                                     +--------------------+---------+
+| id            | int     |<---->+--->| id            | int     |
+| gender_cd     | varchar |      |    | gender_cd     | varchar |
+| age_band      | varchar |      |    | age_band      | varchar |
+| zip_cd        | varchar |      |    | zip_cd        | varchar |
++---------------+---------+      |    +---------------+---------+
+                                 |      
+                                 |  
+                                 |    clm
+rsk                              |    +--------------------+---------+
++---------------+---------+      |    | claim_id           | int     |
+| id            | int     |<-----+--->| id                 | int     |
+| srv_start_dt  | date    |           | srv_start_dt       | date    |
+| retro_risk    | double  |           | paid_prvdr_par_cd  | varchar |
+| prosp_risk    | double  |           | srv_spclty_ctg_cd  | varchar |
++---------------+---------+           | cost_ctg_short_nm  | varchar |
+                                      | paid_amt           | double  |
+                                      | billed_amt         | double  |
+                                      +--------------------+---------+
+```
+
 
 #### Create and Insert Statements
 
@@ -99,6 +102,13 @@ GROUP BY 1
 ORDER BY total_amt DESC;
 ```
 
+##### Expected Output
+
+| srv_spclty_ctg_cd | total_amt |
+|-------------------|-----------|
+| Cardiology        | 4700.00   |
+| Orthopedics       | 9500.00   |
+
 ###### 2. What is the % paid_amount out of total anual paid_amount by provider specialty in 2018?
 
 ```sql
@@ -112,6 +122,13 @@ Where extract(year from srv_start_dt) = 2018
 Group by 1
 Order by 2 desc;
 ```
+
+##### Expected Output
+
+| srv_spclty_ctg_cd | total_amt | paid_amt_perc |
+|-------------------|-----------|---------------|
+| Cardiology        | 4700.00   | 47.00         |
+| Orthopedics       | 9500.00   | 95.00         |
 
 ###### 3. (optional) for each srv_spclty_ctg_cd, which age_band has most number of claims?
 
@@ -141,3 +158,12 @@ from rnk_claims
 where rnk = 1
 order by srv_spclty_ctg_cd, age_band;
 ```
+
+##### Expected Output
+
+| srv_spclty_ctg_cd | age_band    | unique_clms | rnk |
+|-------------------|-----------|---------------|-----|
+| Cardiology        | 18-34     | 1             | 1   |
+| Orthopedics       | 35-50     | 1             | 1   |
+| Orthopedics       | 65+       | 1             | 1   |
+| Orthopedics       | 51-64     | 1             | 1   |
