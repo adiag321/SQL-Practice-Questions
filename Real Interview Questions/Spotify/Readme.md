@@ -70,3 +70,11 @@ GROUP BY genre
 ORDER BY avg_listening_time_per_user DESC
 LIMIT 1;
 ```
+
+## Expected Output
+| genre | avg_listening_time_per_user |
+|-------|-----------------------------|
+| Rock | 95.0 |
+| Classical | 85.0 |
+| Jazz | 67.5 |
+| Pop | 91.42857142857143 |
