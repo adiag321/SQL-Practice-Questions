@@ -40,12 +40,26 @@ INSERT INTO youtube_videos (channel_id, video_id, view_count) VALUES
 
 Solution 1: With Window Functions
 ```sql
+-- Snowflake SQL
 SELECT
 channel_id,
 video_id,
 view_count,
 Qualify ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY view_count DESC) <=5
 FROM youtube_videos;
+
+
+-- PostgreSQL
+WITH RankedViews AS (
+    SELECT 
+        channel_id,
+        view_count,
+        -- Your other columns here...
+        ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY view_count DESC) as row_num
+    FROM your_table_name
+)
+SELECT * FROM RankedViews
+WHERE row_num <= 5;
 ```
 
 Solution 2: Without Window Functions
@@ -64,6 +78,15 @@ WHERE (
 ) <= 5
 ORDER BY v1.channel_id, v1.view_count DESC;
 ```
+
+Expected Output:
+| CHANNEL_ID | VIDEO_ID | VIEW_COUNT | ROW_NUM |
+|------------|----------|------------|---------|
+| 02ea5750bca81c9 | a9b8a8728210b08010b70497 | 78954 | 1 |
+| 02ea5750bca81c9 | ee69bacc234567c4342eeb46 | 66342 | 2 |
+| 02ea5750bca81c9 | abcde12345 | 50000 | 3 |
+| 02ea5750bca81c9 | klmno11223 | 25000 | 4 |
+| 02ea5750bca81c9 | a448b6084ce42607c805a268 | 22229 | 5 |
 
 #### Question 2: Get the most up-to-date subscription data available for each customer
 Imagine you have a table with subscription data, but every time the subscription gets updated in some way a new row is created. You are asked, Can you tell me what percentage of our active subscribers have a monthly membership?
@@ -115,6 +138,11 @@ from recent_bill
 where rn = 1;
 ```
 
+Expected Output:
+| MONTHLY_MEMBERSHIP |
+|----------------------|
+| 100.00               |
+
 #### Question 3: Calculate the cumulative revenue while retaining monthly revenue
 Imagine you have a table with monthly revenue data, and you want to calculate the cumulative revenue while retaining the monthly revenue.
 
@@ -145,7 +173,17 @@ SELECT
 FROM monthly_revenue;
 ```
 
-#### Question 4: Find the first and last time each user was active on each platform
+Expected Output:
+| DATE | REVENUE | CUMULATIVE_REVENUE |
+|------|---------|--------------------|
+| 2019-05-01 | 3380.90 | 3380.90            |
+| 2020-07-01 | 19581.10 | 22962.00           |
+| 2021-04-01 | 24879.00 | 47841.00           |
+| 2021-07-01 | 26747.40 | 74588.40           |
+| 2022-11-01 | 169414.70 | 244003.10          |
+| 2022-12-01 | 13957.60 | 257960.70          |
+
+#### `Question 4: Find the first and last time each user was active on each platform`
 Imagine you have activity data for each one of your users. Users could be active on either Desktop or Mobile. Your stakeholders approach you and ask you to put together a summary of each user activity along with the first and last time they were active on each platform.
 
 Create and Insert Statements: 
@@ -200,6 +238,21 @@ group by user_id, platform, activity_date
 order by 1;
 ```
 
+Expected Output:
+| USER_ID | PLATFORM | FIRST_ACTIVITY | LAST_ACTIVITY |
+|---------|----------|----------------|---------------|
+| 2216df5337ee24 | Desktop | 2019-01-07 | 2019-01-07 |
+| 2646c993ceb3c6f | Desktop | 2019-01-08 | 2019-01-08 |
+| 3848287b83eb4fb | Desktop | 2019-01-07 | 2019-01-07 |
+| 5a07edac1a336f | Desktop | 2019-01-07 | 2019-01-09 |
+| 768b6f97687129 | Desktop | 2019-01-07 | 2019-01-07 |
+| b7047a6a5ec0d4 | Desktop | 2019-01-07 | 2019-01-07 |
+| c9eff36a46c7c61a | Desktop | 2019-01-07 | 2019-01-07 |
+| fdc457eabc7dbcf | Desktop | 2019-01-07 | 2019-01-07 |
+| 13b71d6f91ab81 | Mobile | 2019-01-05 | 2019-01-08 |
+| a6ab2100403dac | Mobile | 2019-01-07 | 2019-01-07 |
+| b7047a6a5ec0d4 | Mobile | 2019-01-07 | 2019-01-07 |
+
 #### `Question 5: Calculate Month-over-Month revenue growth`
 If you have revenue table and your stakeholders approach you and asks How well is the company growing its sales revenue over a given time period, for example year-over-year?
 
@@ -241,3 +294,11 @@ FROM yearly_revenue
 ORDER BY year;
 
 ```
+
+Expected Output:
+| YEAR | TOTAL_REVENUE | PREVIOUS_YEAR_REVENUE | YOY_GROWTH_PERCENTAGE |
+|------|---------------|-------------------------|-------------------------|
+| 2019 | 93268.6       | NULL                    | NULL                    |
+| 2020 | 221638.1        | 93268.6                 | 137.63364974353386      |
+| 2021 | 327238.4        | 221638.1                | 47.642818925372136      |
+| 2022 | 183372.3        | 327238.4                | -43.96067707314821      |
