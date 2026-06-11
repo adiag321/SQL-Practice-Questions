@@ -12,3 +12,4 @@ extras/
 # Agent
 *.agent
 .gemini
+.agents/rules/prep-readme-file.md
