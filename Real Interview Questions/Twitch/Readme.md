@@ -5,7 +5,7 @@
 Return the number of streamer sessions for each user whose very first session was as a viewer.
 Include the user ID and count of streamer sessions for users whose earliest session (by session_start) was a 'viewer' session, regardless of whether they ever had a streamer session later. Sort the results by streamer session count in descending order, then by user ID in ascending order.
 
-**Input Table:**
+## Input Table:
 ```
 | user_id | session_start        | session_end          | session_id | session_type |
 |---------|-----------------------|-----------------------|------------|--------------|
@@ -17,7 +17,7 @@ Include the user ID and count of streamer sessions for users whose earliest sess
 
 ```
 
-**Create and Insert Statement:**
+## Create and Insert Statement:
 ```sql
 CREATE TABLE user_sessions (
     user_id VARCHAR(10),
@@ -35,7 +35,7 @@ INSERT INTO user_sessions (user_id, session_start, session_end, session_id, sess
 ('2', '2020-11-14 03:36:05', '2020-11-14 03:39:19', 646, 'viewer');
 ```
 
-**Solution:**
+## Solution:
 ```sql
 with session_rnk as (
 select
@@ -60,4 +60,11 @@ where user_id in (select user_id from viewer_session)
 and session_type = 'streamer'
 group by 1
 order by 1;
+```
+
+## Expected Output:
+```
+| user_id | total_sessions |
+|---------|----------------|
+| 2       | 2              |
 ```
