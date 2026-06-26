@@ -65,29 +65,24 @@ WITH promotion_wait AS (
         e.department_id,
         d.department_name,
         e.hire_date,
-        MIN(p.promotion_date)                              AS first_promotion_date,
-        DATEDIFF(MIN(p.promotion_date), e.hire_date)       AS days_to_promotion
-    FROM Employee   e
+        MIN(p.promotion_date) AS first_promotion_date,
+        DATEDIFF(MIN(p.promotion_date), e.hire_date) AS days_to_promotion
+    FROM Employee e
     JOIN Department d ON e.department_id = d.department_id
-    JOIN Promotions p ON e.employee_id   = p.employee_id
-    GROUP BY
-        e.employee_id, e.name, e.department_id,
-        d.department_name, e.hire_date
+    JOIN Promotions p ON e.employee_id = p.employee_id
+    GROUP BY e.employee_id, e.name, e.department_id, d.department_name, e.hire_date
 ),
 ranked AS (
     -- Step 2: Rank employees within each department by longest wait
     SELECT
         *,
-        RANK() OVER (
-            PARTITION BY department_id
-            ORDER BY days_to_promotion DESC
-        ) AS rnk
+        RANK() OVER (PARTITION BY department_id ORDER BY days_to_promotion DESC) AS rnk
     FROM promotion_wait
 )
 -- Step 3: Return only the top-ranked employee per department
 SELECT
     department_name,
-    name               AS employee_name,
+    name AS employee_name,
     hire_date,
     first_promotion_date,
     days_to_promotion
