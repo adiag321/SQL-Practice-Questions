@@ -202,10 +202,19 @@ INSERT INTO user_activity (activity_date, platform, user_id, plays, downloads) V
 ('2019-01-07', 'Mobile', '13b71d6f91ab81', 47, 19),
 ('2019-01-08', 'Mobile', '13b71d6f91ab81', 12, 5),
 ('2019-01-05', 'Mobile', '13b71d6f91ab81', 25, 8),
+('2019-01-06', 'Desktop', '13b71d6f91ab81', 30, 10),
+('2019-01-10', 'Desktop', '13b71d6f91ab81', 55, 20),
 ('2019-01-07', 'Desktop', '5a07edac1a336f', 25, 5),
 ('2019-01-09', 'Desktop', '5a07edac1a336f', 40, 10),
+('2019-01-08', 'Mobile', '5a07edac1a336f', 15, 3),
+('2019-01-11', 'Mobile', '5a07edac1a336f', 22, 7),  
 ('2019-01-07', 'Mobile', 'b7047a6a5ec0d4', 34, 3),
+('2019-01-09', 'Mobile', 'b7047a6a5ec0d4', 20, 6),
+('2019-01-07', 'Desktop', 'b7047a6a5ec0d4', 18, 2),
+('2019-01-12', 'Desktop', 'b7047a6a5ec0d4', 45, 9),
 ('2019-01-07', 'Desktop', '2216df5337ee24', 110, 13),
+('2019-01-10', 'Desktop', '2216df5337ee24', 80, 8),
+('2019-01-09', 'Mobile', '2216df5337ee24', 60, 11),
 ('2019-01-07', 'Desktop', '768b6f97687129', 18, 4),
 ('2019-01-07', 'Mobile', 'a6ab2100403dac', 7, 5),
 ('2019-01-08', 'Desktop', '2646c993ceb3c6f', 8, 5),
@@ -241,17 +250,20 @@ order by 1;
 Expected Output:
 | USER_ID | PLATFORM | FIRST_ACTIVITY | LAST_ACTIVITY |
 |---------|----------|----------------|---------------|
-| 2216df5337ee24 | Desktop | 2019-01-07 | 2019-01-07 |
+| 13b71d6f91ab81 | Desktop | 2019-01-06 | 2019-01-10 |
+| 13b71d6f91ab81 | Mobile | 2019-01-05 | 2019-01-08 |
+| 2216df5337ee24 | Desktop | 2019-01-07 | 2019-01-10 |
+| 2216df5337ee24 | Mobile | 2019-01-09 | 2019-01-09 |
 | 2646c993ceb3c6f | Desktop | 2019-01-08 | 2019-01-08 |
 | 3848287b83eb4fb | Desktop | 2019-01-07 | 2019-01-07 |
 | 5a07edac1a336f | Desktop | 2019-01-07 | 2019-01-09 |
+| 5a07edac1a336f | Mobile | 2019-01-08 | 2019-01-11 |
 | 768b6f97687129 | Desktop | 2019-01-07 | 2019-01-07 |
-| b7047a6a5ec0d4 | Desktop | 2019-01-07 | 2019-01-07 |
+| a6ab2100403dac | Mobile | 2019-01-07 | 2019-01-07 |
+| b7047a6a5ec0d4 | Desktop | 2019-01-07 | 2019-01-12 |
+| b7047a6a5ec0d4 | Mobile | 2019-01-07 | 2019-01-09 |
 | c9eff36a46c7c61a | Desktop | 2019-01-07 | 2019-01-07 |
 | fdc457eabc7dbcf | Desktop | 2019-01-07 | 2019-01-07 |
-| 13b71d6f91ab81 | Mobile | 2019-01-05 | 2019-01-08 |
-| a6ab2100403dac | Mobile | 2019-01-07 | 2019-01-07 |
-| b7047a6a5ec0d4 | Mobile | 2019-01-07 | 2019-01-07 |
 
 #### `Question 5: Calculate Month-over-Month revenue growth`
 If you have revenue table and your stakeholders approach you and asks How well is the company growing its sales revenue over a given time period, for example year-over-year?
