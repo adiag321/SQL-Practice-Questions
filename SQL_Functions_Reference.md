@@ -103,6 +103,7 @@ ORDER BY product_id, date;
 | **5. Date Arithmetic** | `date + INTERVAL 7 DAY` | `date + INTERVAL '7 days'` | `date(date, '+7 days')` |
 | **6. Rolling Window (Range)** | `RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW` | `RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW` | `RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW` *(use unixepoch)* |
 | **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | `date(date, 'start of month')`<br>`date(date, 'start of year')` |
+| **8. TimeStamp Difference in Seconds** | `TIMESTAMPDIFF(SECOND, ts1, ts2)` | `EXTRACT(EPOCH FROM (ts2 - ts1))` | `strftime('%s', ts2) - strftime('%s', ts1)` |
 
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
@@ -436,3 +437,440 @@ ROUND((some_float_result)::NUMERIC, 2)
 -- SQL Server:   CAST(col AS FLOAT)  OR  CONVERT(FLOAT, col)
 ```
 </details>
+
+---
+
+## 11. Advanced Window Functions
+
+### Distribution & Navigation Functions
+| Function | Syntax | Purpose |
+| :--- | :--- | :--- |
+| **`NTILE(n)`** | `NTILE(4) OVER(ORDER BY salary DESC)` | Splits rows into **n** equal buckets (great for quartiles/percentiles) |
+| **`PERCENT_RANK()`** | `PERCENT_RANK() OVER(ORDER BY score)` | Relative rank as a fraction `(rank-1)/(total_rows-1)` — range `[0,1]` |
+| **`CUME_DIST()`** | `CUME_DIST() OVER(ORDER BY score)` | Cumulative distribution — fraction of rows ≤ current row |
+| **`FIRST_VALUE(col)`** | `FIRST_VALUE(col) OVER(PARTITION BY ... ORDER BY ...)` | Returns first value in the window frame |
+| **`LAST_VALUE(col)`** | `LAST_VALUE(col) OVER(... ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)` | Returns last value in the window frame |
+| **`NTH_VALUE(col, n)`** | `NTH_VALUE(col, 2) OVER(...)` | Returns the nth value in the window |
+
+<details>
+<summary><b>View Advanced Window Function Examples</b></summary>
+
+```sql
+-- 1. NTILE: Label employees by salary quartile
+SELECT emp_name, salary,
+       NTILE(4) OVER(ORDER BY salary DESC) AS salary_quartile
+FROM employees;
+-- Quartile 1 = top 25%, Quartile 4 = bottom 25%
+
+-- 2. PERCENT_RANK: What % of products have lower sales than this one?
+SELECT product_id, total_sales,
+       ROUND(PERCENT_RANK() OVER(ORDER BY total_sales) * 100, 2) AS pct_rank
+FROM product_summary;
+
+-- 3. CUME_DIST: Find top 30% of customers by spend
+SELECT customer_id, total_spend
+FROM (
+    SELECT customer_id, total_spend,
+           CUME_DIST() OVER(ORDER BY total_spend DESC) AS cum_dist
+    FROM customer_summary
+) x
+WHERE cum_dist <= 0.30;
+
+-- 4. FIRST_VALUE / LAST_VALUE: Compare each row to the department's highest/lowest salary
+SELECT emp_name, department, salary,
+       FIRST_VALUE(salary) OVER(PARTITION BY department ORDER BY salary DESC) AS dept_max_salary,
+       LAST_VALUE(salary)  OVER(PARTITION BY department ORDER BY salary DESC
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS dept_min_salary
+FROM employees;
+-- NOTE: LAST_VALUE needs explicit frame to include all rows (default frame stops at current row)
+
+-- 5. NTH_VALUE: Get the 2nd highest salary per department
+SELECT emp_name, department, salary,
+       NTH_VALUE(salary, 2) OVER(PARTITION BY department ORDER BY salary DESC
+                                  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS second_highest
+FROM employees;
+```
+</details>
+
+---
+
+## 12. NULL Safety & Conditional Functions
+
+| Function | Syntax | Purpose | Note |
+| :--- | :--- | :--- | :--- |
+| **`NULLIF(a, b)`** | `NULLIF(denominator, 0)` | Returns NULL if `a = b`, else returns `a` | **Critical to prevent division-by-zero errors** |
+| **`IFNULL(col, default)`** | `IFNULL(score, 0)` | Returns `default` if `col` IS NULL | MySQL / SQLite only |
+| **`ISNULL(col, default)`** | `ISNULL(score, 0)` | Same as `IFNULL` | SQL Server only |
+| **`NVL(col, default)`** | `NVL(score, 0)` | Same as `IFNULL` | Oracle only |
+| **`COALESCE(a, b, c, ...)`** | `COALESCE(col1, col2, 0)` | Returns first non-NULL from the list | **Universally supported — preferred** |
+| **`IIF(cond, true_val, false_val)`** | `IIF(score > 90, 'A', 'B')` | Inline if/else shorthand | SQL Server / Access only |
+
+<details>
+<summary><b>View NULL Safety & Conditional Examples</b></summary>
+
+```sql
+-- 1. NULLIF: Avoid division by zero (universal pattern)
+SELECT product_id,
+       total_revenue / NULLIF(total_units_sold, 0) AS avg_revenue_per_unit
+FROM product_summary;
+-- If total_units_sold = 0, the denominator becomes NULL → result is NULL (safe, no error)
+
+-- 2. COALESCE vs IFNULL (behavior is identical for 2 arguments):
+SELECT emp_name,
+       COALESCE(bonus, 0)   AS bonus_coalesce,   -- Works in ALL dialects
+       IFNULL(bonus, 0)     AS bonus_ifnull       -- MySQL / SQLite only
+FROM employees;
+
+-- 3. COALESCE with multiple fallbacks (COALESCE wins here — IFNULL only takes 2 args):
+SELECT COALESCE(preferred_email, work_email, personal_email, 'no-email@unknown.com') AS contact_email
+FROM users;
+
+-- 4. Combined pattern: NULLIF + ROUND + COALESCE (production-grade safe division)
+SELECT
+    ROUND(COALESCE(num_clicks * 1.0 / NULLIF(num_impressions, 0), 0) * 100, 2) AS ctr_pct
+FROM ad_metrics;
+```
+</details>
+
+---
+
+## 13. Advanced String Functions
+
+| Function | MySQL | PostgreSQL | SQL Server | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **`LEFT(col, n)`** | `LEFT(col, 3)` | `LEFT(col, 3)` | `LEFT(col, 3)` | First `n` characters |
+| **`RIGHT(col, n)`** | `RIGHT(col, 3)` | `RIGHT(col, 3)` | `RIGHT(col, 3)` | Last `n` characters |
+| **`REPLACE(col, old, new)`** | `REPLACE(col,'a','b')` | `REPLACE(col,'a','b')` | `REPLACE(col,'a','b')` | Substitute substring |
+| **`POSITION(sub IN col)`** | `POSITION('x' IN col)` | `POSITION('x' IN col)` | `CHARINDEX('x', col)` | Index of first occurrence |
+| **`SPLIT_PART(col, delim, n)`** | `SUBSTRING_INDEX(col,',',1)` | `SPLIT_PART(col,',',1)` | *(use STRING_SPLIT)* | Extract nth split token |
+| **`REGEXP_LIKE(col, pattern)`** | `col REGEXP 'pattern'` | `col ~ 'pattern'` | `col LIKE '%pattern%'`* | Regex pattern match |
+| **`LPAD / RPAD`** | `LPAD(col, 5, '0')` | `LPAD(col, 5, '0')` | `RIGHT('00000'+col, 5)` | Pad string to fixed width |
+| **`REVERSE(col)`** | `REVERSE(col)` | `REVERSE(col)` | `REVERSE(col)` | Reverse a string |
+
+<details>
+<summary><b>View Advanced String Function Examples</b></summary>
+
+```sql
+-- 1. LEFT / RIGHT: Extract area code and last 4 digits from phone number
+SELECT phone_number,
+       LEFT(phone_number, 3)  AS area_code,
+       RIGHT(phone_number, 4) AS last_four
+FROM customers;
+
+-- 2. REPLACE: Sanitize data by removing unwanted characters
+SELECT REPLACE(REPLACE(phone_number, '-', ''), ' ', '') AS clean_phone
+FROM customers;
+
+-- 3. POSITION (PostgreSQL/MySQL) vs CHARINDEX (SQL Server):
+-- Find the position of '@' in an email to extract the domain
+-- PostgreSQL / MySQL:
+SELECT email, SUBSTRING(email, POSITION('@' IN email) + 1) AS domain FROM users;
+-- SQL Server:
+SELECT email, SUBSTRING(email, CHARINDEX('@', email) + 1, LEN(email)) AS domain FROM users;
+
+-- 4. SPLIT_PART: Extract first name from a full name (PostgreSQL)
+SELECT SPLIT_PART(full_name, ' ', 1) AS first_name FROM employees;
+
+-- MySQL equivalent using SUBSTRING_INDEX:
+SELECT SUBSTRING_INDEX(full_name, ' ', 1) AS first_name FROM employees;
+
+-- 5. REGEXP: Find rows where email doesn't match a valid pattern (MySQL)
+SELECT * FROM users WHERE email NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';
+
+-- PostgreSQL equivalent using ~ (tilde):
+SELECT * FROM users WHERE email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';
+
+-- 6. LPAD: Zero-pad an ID to always be 6 digits wide
+SELECT LPAD(CAST(user_id AS VARCHAR), 6, '0') AS padded_id FROM users;
+```
+</details>
+
+---
+
+## 14. GROUP BY Extensions (ROLLUP, CUBE, GROUPING SETS)
+
+| Clause | Purpose | Typical Use Case |
+| :--- | :--- | :--- |
+| **`GROUP BY ROLLUP(a, b)`** | Hierarchical subtotals: `(a,b)`, `(a)`, `()` | Sales totals by region → country → grand total |
+| **`GROUP BY CUBE(a, b)`** | All possible subtotal combinations | Cross-dimensional reporting (every combo of dims) |
+| **`GROUP BY GROUPING SETS((a,b),(a),(b),())`** | Explicit control over which groupings to include | Custom multi-level aggregation |
+| **`GROUPING(col)`** | Returns 1 if the column is aggregated (NULL represents subtotal), 0 otherwise | Distinguish real NULLs from rollup NULLs |
+
+<details>
+<summary><b>View GROUP BY Extension Examples</b></summary>
+
+```sql
+-- 1. ROLLUP: Sales by (region, product), then just (region), then grand total
+SELECT region, product, SUM(sales) AS total_sales
+FROM orders
+GROUP BY ROLLUP(region, product)
+ORDER BY region, product;
+-- Produces rows for each (region, product) pair + a subtotal per region + a grand total row
+
+-- 2. CUBE: Every combination of (region) and (year)
+SELECT region, year, SUM(revenue) AS total_revenue
+FROM sales
+GROUP BY CUBE(region, year);
+-- Produces: (region,year), (region), (year), () — all 4 combinations
+
+-- 3. GROUPING SETS: Explicitly pick only the groupings you need
+SELECT region, product_category, SUM(revenue) AS total_revenue
+FROM sales
+GROUP BY GROUPING SETS (
+    (region, product_category),   -- by both dimensions
+    (region),                      -- by region only
+    ()                             -- grand total only
+);
+
+-- 4. GROUPING(): Differentiate real NULLs from subtotal NULLs
+SELECT
+    CASE WHEN GROUPING(region) = 1 THEN 'ALL REGIONS' ELSE region END AS region_label,
+    SUM(sales) AS total_sales
+FROM orders
+GROUP BY ROLLUP(region);
+```
+</details>
+
+---
+
+## 15. Set Operations (UNION, INTERSECT, EXCEPT)
+
+| Operator | Behavior | Duplicates |
+| :--- | :--- | :--- |
+| **`UNION`** | Combines results of two queries | **Removes** duplicates (like `DISTINCT`) |
+| **`UNION ALL`** | Combines results of two queries | **Keeps** all rows including duplicates — faster than `UNION` |
+| **`INTERSECT`** | Returns rows present in **both** queries | Removes duplicates |
+| **`EXCEPT`** (`MINUS` in Oracle) | Returns rows in first query **not** in second | Removes duplicates |
+
+> **Key Rules:**
+> - Both queries must have the **same number of columns** and **compatible data types**
+> - Column names come from the **first** query
+> - `ORDER BY` goes at the very end (applies to the full combined result)
+
+<details>
+<summary><b>View Set Operation Examples</b></summary>
+
+```sql
+-- 1. UNION: Combine customers from two regions (deduplicating overlaps)
+SELECT customer_id, name FROM customers_us
+UNION
+SELECT customer_id, name FROM customers_eu;
+
+-- 2. UNION ALL: Combine all transactions from two tables (keep duplicates, faster)
+SELECT order_id, amount, 'online' AS channel FROM online_orders
+UNION ALL
+SELECT order_id, amount, 'in_store' AS channel FROM store_orders;
+
+-- 3. INTERSECT: Find customers who bought in BOTH last month AND this month
+SELECT customer_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 5
+INTERSECT
+SELECT customer_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 6;
+
+-- 4. EXCEPT: Find customers who bought last month but NOT this month (churned)
+SELECT customer_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 5
+EXCEPT
+SELECT customer_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 6;
+
+-- Oracle equivalent uses MINUS instead of EXCEPT:
+-- SELECT customer_id FROM last_month_orders
+-- MINUS
+-- SELECT customer_id FROM this_month_orders;
+
+-- 5. Classic interview pattern: Symmetric difference using UNION ALL + EXCEPT
+-- (rows in A not in B, OR rows in B not in A)
+(SELECT customer_id FROM table_a EXCEPT SELECT customer_id FROM table_b)
+UNION ALL
+(SELECT customer_id FROM table_b EXCEPT SELECT customer_id FROM table_a);
+```
+</details>
+
+---
+
+## 16. EXISTS & NOT EXISTS
+
+| Pattern | Syntax | vs. Alternative |
+| :--- | :--- | :--- |
+| **`EXISTS`** | `WHERE EXISTS (SELECT 1 FROM ...)` | Faster than `IN` when subquery result is large; short-circuits on first match |
+| **`NOT EXISTS`** | `WHERE NOT EXISTS (SELECT 1 FROM ...)` | Safer than `NOT IN` — handles NULLs correctly |
+
+> **Critical Gotcha:** `NOT IN` returns **no rows** if the subquery contains any `NULL`. `NOT EXISTS` handles NULLs safely and is almost always the better choice.
+
+<details>
+<summary><b>View EXISTS / NOT EXISTS Examples</b></summary>
+
+```sql
+-- 1. EXISTS: Find customers who placed at least one order
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE EXISTS (
+    SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id
+);
+
+-- 2. NOT EXISTS: Find customers who have NEVER placed an order (safe NULL handling)
+SELECT c.customer_id, c.name
+FROM customers c
+WHERE NOT EXISTS (
+    SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id
+);
+-- Preferred over NOT IN when subquery might return NULLs
+
+-- 3. NOT IN pitfall (DANGEROUS if subquery has NULLs):
+SELECT customer_id FROM customers
+WHERE customer_id NOT IN (SELECT customer_id FROM orders);
+-- If any customer_id in orders is NULL, this returns 0 rows!
+
+-- 4. EXISTS with correlated subquery: Products that were sold in every region
+SELECT p.product_id, p.product_name
+FROM products p
+WHERE NOT EXISTS (
+    SELECT 1 FROM regions r
+    WHERE NOT EXISTS (
+        SELECT 1 FROM sales s
+        WHERE s.product_id = p.product_id AND s.region_id = r.region_id
+    )
+);
+```
+</details>
+
+---
+
+## 17. Collection Aggregation (STRING_AGG, GROUP_CONCAT, ARRAY_AGG)
+
+| Function | MySQL | PostgreSQL | SQL Server | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **Concat to string** | `GROUP_CONCAT(col ORDER BY col SEPARATOR ', ')` | `STRING_AGG(col, ', ' ORDER BY col)` | `STRING_AGG(col, ', ') WITHIN GROUP (ORDER BY col)` | Collapse many rows into one comma-separated string |
+| **Aggregate to array** | *(not native)* | `ARRAY_AGG(col ORDER BY col)` | *(not native)* | Collapse rows into a SQL array |
+| **Count distinct** | `COUNT(DISTINCT col)` | `COUNT(DISTINCT col)` | `COUNT(DISTINCT col)` | Count unique values — already in Section 3 |
+
+<details>
+<summary><b>View Collection Aggregation Examples</b></summary>
+
+```sql
+-- 1. STRING_AGG (PostgreSQL / SQL Server): List all skills per employee as a string
+SELECT employee_id,
+       STRING_AGG(skill, ', ' ORDER BY skill) AS all_skills
+FROM employee_skills
+GROUP BY employee_id;
+-- Result: emp_id=1 → "Excel, Python, SQL"
+
+-- 2. GROUP_CONCAT (MySQL): Same pattern
+SELECT employee_id,
+       GROUP_CONCAT(skill ORDER BY skill SEPARATOR ', ') AS all_skills
+FROM employee_skills
+GROUP BY employee_id;
+
+-- 3. ARRAY_AGG (PostgreSQL): Aggregate into a true array for array operations
+SELECT department_id,
+       ARRAY_AGG(emp_name ORDER BY salary DESC) AS employees_by_salary
+FROM employees
+GROUP BY department_id;
+
+-- 4. Interview Pattern: Find employees who hold multiple roles (using GROUP_CONCAT / STRING_AGG)
+SELECT employee_id,
+       COUNT(role) AS num_roles,
+       STRING_AGG(role, ', ') AS roles_held
+FROM employee_roles
+GROUP BY employee_id
+HAVING COUNT(role) > 1;
+
+-- 5. De-duplicate and join values (PostgreSQL)
+SELECT department_id,
+       STRING_AGG(DISTINCT emp_name, ', ' ORDER BY emp_name) AS unique_employees
+FROM assignments
+GROUP BY department_id;
+```
+</details>
+
+---
+
+## 18. Statistical & Percentile Functions
+
+| Function | Syntax | Purpose | Support |
+| :--- | :--- | :--- | :--- |
+| **`STDDEV(col)`** | `STDDEV(salary)` | Population standard deviation | MySQL, PostgreSQL, SQL Server (`STDEV`) |
+| **`VARIANCE(col)`** | `VARIANCE(salary)` | Population variance | MySQL, PostgreSQL, SQL Server (`VAR`) |
+| **`STDDEV_SAMP(col)`** | `STDDEV_SAMP(salary)` | Sample standard deviation (Bessel's correction) | MySQL, PostgreSQL |
+| **`PERCENTILE_CONT(p)`** | `PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary)` | Continuous percentile (interpolates) — **median** | PostgreSQL, SQL Server |
+| **`PERCENTILE_DISC(p)`** | `PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY salary)` | Discrete percentile (returns an actual row value) | PostgreSQL, SQL Server |
+| **`CORR(x, y)`** | `CORR(price, units_sold)` | Pearson correlation coefficient | PostgreSQL |
+| **`REGR_SLOPE(y, x)`** | `REGR_SLOPE(revenue, units)` | Slope of linear regression line | PostgreSQL |
+
+<details>
+<summary><b>View Statistical Function Examples</b></summary>
+
+```sql
+-- 1. STDDEV & VARIANCE: Measure salary spread by department
+SELECT department,
+       ROUND(AVG(salary), 2)      AS avg_salary,
+       ROUND(STDDEV(salary), 2)   AS salary_stddev,
+       ROUND(VARIANCE(salary), 2) AS salary_variance
+FROM employees
+GROUP BY department;
+
+-- 2. PERCENTILE_CONT: Compute median salary (continuous interpolation) — PostgreSQL / SQL Server
+SELECT department,
+       PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
+FROM employees
+GROUP BY department;
+
+-- 3. PERCENTILE_DISC: Compute 75th percentile (returns an actual observed salary value)
+SELECT PERCENTILE_DISC(0.75) WITHIN GROUP (ORDER BY salary) AS p75_salary
+FROM employees;
+
+-- 4. MySQL Median workaround (no PERCENTILE_CONT):
+-- Use the ROW_NUMBER dual-rank trick (see Section 8 for full pattern)
+WITH ranked AS (
+    SELECT salary,
+           ROW_NUMBER() OVER (ORDER BY salary ASC)  AS rn_asc,
+           ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn_desc
+    FROM employees
+)
+SELECT AVG(salary) AS median_salary
+FROM ranked
+WHERE ABS(rn_asc - rn_desc) <= 1;
+
+-- 5. CORR: Correlation between price and quantity sold (PostgreSQL)
+SELECT ROUND(CORR(price, units_sold)::NUMERIC, 4) AS price_units_correlation
+FROM product_sales;
+-- Result near +1: strong positive correlation; near -1: inverse; near 0: no linear relationship
+
+-- 6. STDDEV as a window function (detect outliers)
+SELECT emp_name, salary,
+       AVG(salary)    OVER (PARTITION BY department) AS dept_avg,
+       STDDEV(salary) OVER (PARTITION BY department) AS dept_stddev
+FROM employees;
+-- Outlier if: ABS(salary - dept_avg) > 2 * dept_stddev
+```
+</details>
+
+---
+
+## 19. QUALIFY (Snowflake / BigQuery)
+
+`QUALIFY` is a Snowflake/BigQuery-specific clause that filters the results of **window functions directly**, without needing a subquery or CTE. It is evaluated after `WHERE`, `GROUP BY`, and `HAVING`.
+
+```sql
+-- Standard approach (any dialect) — requires a subquery:
+SELECT user_id, spend, transaction_date
+FROM (
+    SELECT user_id, spend, transaction_date,
+           ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date) AS rn
+    FROM transactions
+) x
+WHERE rn = 3;
+
+-- Snowflake / BigQuery shorthand using QUALIFY (no subquery needed):
+SELECT user_id, spend, transaction_date
+FROM transactions
+QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date) = 3;
+```
+
+| Clause Execution Order | Purpose |
+| :--- | :--- |
+| `WHERE` | Filters raw rows |
+| `GROUP BY` + `HAVING` | Groups and filters aggregates |
+| Window functions | Computed after grouping |
+| **`QUALIFY`** | **Filters on window function results** |
+
+---
+
