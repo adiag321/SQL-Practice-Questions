@@ -5,9 +5,9 @@
 ### Ranking Functions
 | Function | Syntax | Ties Handling |
 | :--- | :--- | :--- |
-| **`ROW_NUMBER()`** | `ROW_NUMBER() OVER(...)` | Unique sequential integer |
-| **`RANK()`** | `RANK() OVER(...)` | Same rank for ties |
-| **`DENSE_RANK()`** | `DENSE_RANK() OVER(...)` | Same rank for ties |
+| **`ROW_NUMBER()`** | `ROW_NUMBER() OVER(...)` | 1,2,3,4,5,6.. |
+| **`RANK()`** | `RANK() OVER(...)` | 1,1,3,4,5... |
+| **`DENSE_RANK()`** | `DENSE_RANK() OVER(...)` | 1,1,2,3,4... |
 
 <details>
 <summary><b>View Ranking Examples</b></summary>
@@ -53,6 +53,7 @@ WHERE rn = 1;
 | **`LEAD(col, offset)`** | `LEAD(col) OVER(...)` | Returns value from **next** row |
 | **`SUM() OVER()`** | `SUM(col) OVER(...)` | Running / Cumulative Total |
 | **`AVG() OVER()`** | `AVG(col) OVER(...)` | Moving Average (using `ROWS BETWEEN ...`) |
+| **`COUNT(*) OVER()`** | `COUNT(*) OVER(PARTITION BY col)` | Windowed count without collapsing rows (great for tagging/flagging) |
 
 <details>
 <summary><b>View Value/Analytics Examples</b></summary>
@@ -64,16 +65,16 @@ WITH prev_rev AS (
         LAG(revenue) OVER(PARTITION BY product_name ORDER BY year) AS prev_year_revenue
     FROM product_revenue
 )
-SELECT product_name, revenue AS current_year_revenue, prev_year_revenue,
-       ROUND(((prev_year_revenue - revenue) / prev_year_revenue) * 100.0, 2) AS pct_decrease
+SELECT product_name, 
+    revenue AS current_year_revenue, 
+    prev_year_revenue,
+    ROUND(((prev_year_revenue - revenue) / prev_year_revenue) * 100.0, 2) AS pct_decrease
 FROM prev_rev
 WHERE prev_year_revenue > revenue;
 
 -- 2. Moving Average: 3-day rolling average (General pattern)
 SELECT order_date, amount,
-       AVG(amount) OVER(
-           PARTITION BY user_id
-           ORDER BY order_date
+       AVG(amount) OVER(PARTITION BY user_id ORDER BY order_date
            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
        ) AS moving_avg_3day
 FROM orders;
@@ -87,6 +88,33 @@ SELECT
     SUM(revenue) OVER (PARTITION BY product_id ORDER BY date) AS running_total
 FROM orders
 ORDER BY product_id, date;
+
+-- 4. LEAD: Success rate after a failed post (Exponent) File: Exponent/16__Post Success After Failure.md
+WITH post_succ_cte AS (
+    SELECT user_id, post_date,
+        is_successful_post AS prev_post_is_succ,
+        LEAD(is_successful_post) OVER (PARTITION BY user_id ORDER BY post_date) AS next_post_is_succ
+    FROM post
+)
+SELECT user_id,
+    SUM(CASE WHEN prev_post_is_succ = 0 AND next_post_is_succ = 1 THEN 1 ELSE 0 END)
+        * 100.00 / COUNT(*) AS next_post_sc_rate
+FROM post_succ_cte
+GROUP BY 1;
+
+-- 5. COUNT(*) OVER(): Tag each transaction with total offences per customer (Visa - Exponent) File: Exponent/12_Fraudulent Transactions.md
+WITH SuspiciousTransactions AS (
+    SELECT customer_id, receipt_number,
+        COUNT(*) OVER (PARTITION BY customer_id) AS no_of_offences
+    FROM transactions
+    WHERE receipt_number LIKE '%999%'
+       OR receipt_number LIKE '%1234%'
+       OR receipt_number LIKE '%XYZ%'
+)
+SELECT c.first_name, c.last_name, s.receipt_number, s.no_of_offences
+FROM customers c
+JOIN SuspiciousTransactions s ON c.customer_id = s.customer_id
+WHERE s.no_of_offences >= 2;
 ```
 </details>
 
@@ -96,14 +124,15 @@ ORDER BY product_id, date;
 
 | Scenario | MySQL | PostgreSQL | SQLite |
 | :--- | :--- | :--- | :--- |
-| **1. Extract Part from Date** | `EXTRACT(MONTH FROM date)`<br>`YEAR(date)`, `MONTH(date)`, `DAY(date)` | `EXTRACT(MONTH FROM DATE '...')`<br>`date_part('year', TIMESTAMP '...')` | `strftime('%m', date)`<br>`CAST(strftime('%Y', date) AS INTEGER)` |
-| **2. Format Part of Date** | `DATE_FORMAT(date, '%Y-%m')` | `TO_CHAR(TIMESTAMP '...', 'YYYY-MM')` | `strftime('%Y-%m', date)` |
-| **3. Get Current Date** | `CURRENT_DATE()` / `CURDATE()`<br>`NOW()` / `CURRENT_TIMESTAMP()` | `CURRENT_DATE`<br>`NOW()` / `CURRENT_TIMESTAMP` | `date('now')` / `CURRENT_DATE`<br>`datetime('now')` / `CURRENT_TIMESTAMP` |
-| **4. Date Differences** | `DATEDIFF(date1, date2)` *(days)*<br>`TIMESTAMPDIFF(MONTH, d1, d2)` | `date1 - date2` *(integer days)*<br>`AGE(ts1, ts2)` *(interval)* | `julianday(d1) - julianday(d2)` *(fractional days)*<br>`unixepoch(d1) - unixepoch(d2)` *(seconds)* |
-| **5. Date Arithmetic** | `date + INTERVAL 7 DAY` | `date + INTERVAL '7 days'` | `date(date, '+7 days')` |
-| **6. Rolling Window (Range)** | `RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW` | `RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW` | `RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW` *(use unixepoch)* |
-| **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | `date(date, 'start of month')`<br>`date(date, 'start of year')` |
-| **8. TimeStamp Difference in Seconds** | `TIMESTAMPDIFF(SECOND, ts1, ts2)` | `EXTRACT(EPOCH FROM (ts2 - ts1))` | `strftime('%s', ts2) - strftime('%s', ts1)` |
+| **1. Extract Part from Date** | `EXTRACT(MONTH FROM date)`<br>`YEAR(date)`, `MONTH(date)`, `DAY(date)` | `EXTRACT(MONTH FROM DATE '...')`<br>`date_part('year', TIMESTAMP '...')` | `strftime('%m', date)`<br>CAST(strftime('%Y', date) AS INTEGER) |
+| **2. Format Part of Date** | `DATE_FORMAT(date, '%Y-%m')` | `TO_CHAR(TIMESTAMP '...', 'YYYY-MM')` | strftime('%Y-%m', date) |
+| **3. Get Current Date** | `CURRENT_DATE()` / `CURDATE()`<br>`NOW()` / `CURRENT_TIMESTAMP()` | `CURRENT_DATE`<br>`NOW()` / `CURRENT_TIMESTAMP` | date('now') / CURRENT_DATE<br>datetime('now') / CURRENT_TIMESTAMP |
+| **4. Date Differences** | `DATEDIFF(date1, date2)` *(days)*<br>`TIMESTAMPDIFF(MONTH, d1, d2)` | `date1 - date2` *(integer days)*<br>`AGE(ts1, ts2)` *(interval)* | julianday(d1) - julianday(d2) |
+| **5. Date Arithmetic** | `date + INTERVAL 7 DAY` | `date + INTERVAL '7 days'` | date(date, '+7 days') |
+| **6. Rolling Window (Range)** | `RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW` | `RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW` | RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW |
+| **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | date(date, 'start of month')<br>date(date, 'start of year') |
+| **8. TimeStamp Difference in Seconds** | `TIMESTAMPDIFF(SECOND, ts1, ts2)` | `EXTRACT(EPOCH FROM (ts2 - ts1))` | strftime('%s', ts2) - strftime('%s', ts1) |
+| **9. Past N Days (Integer Arithmetic)** | `CURRENT_DATE - INTERVAL 7 DAY`<br>`CURDATE() - INTERVAL 7 DAY` | `CURRENT_DATE - 7` | date('now', '-7 days') |
 
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
@@ -153,6 +182,20 @@ WITH ranked_orders AS (
 SELECT * FROM ranked_orders
 WHERE rnk = 2 AND julianday(order_date) - julianday(prev_order) <= 30;
 ```
+
+#### 3. Past N Days Filtering (CURRENT_DATE - N)
+```sql
+-- PostgreSQL: Filter posts from the last 7 days (Facebook) File: 30_Days_SQL_Challenge/13.sql
+SELECT user_id, SUM(likes) AS total_likes, COUNT(post_id) AS cnt_post
+FROM posts
+WHERE post_date >= CURRENT_DATE - 7
+  AND post_date < CURRENT_DATE
+GROUP BY user_id
+HAVING COUNT(post_id) > 2;
+-- NOTE: In PostgreSQL, CURRENT_DATE is a DATE type and subtracting an integer gives (date - N days).
+-- In MySQL, use: WHERE post_date >= CURDATE() - INTERVAL 7 DAY
+-- In SQLite, use: WHERE post_date >= date('now', '-7 days')
+```
 </details>
 
 ---
@@ -194,7 +237,10 @@ HAVING COUNT(1) > 1;
 | **`IS NULL / IS NOT NULL`** | `col IS NULL` | Check if a column has missing (NULL) values |
 | **`ROUND()`** | `ROUND(value, decimal_places)` | Formats numeric outputs |
 | **`ABS()`** | `ABS(value)` | Absolute value (great for differences/variances) |
+| **`FLOOR()`** | `FLOOR(value / bin_size)` | Rounds down to nearest integer — great for histogram binning |
 | **Float Cast** | `col * 1.0` or `col::float` | Avoids integer division truncation |
+| **`<>` / `!=`** | `col1 <> col2` | Not-equal comparison — standard SQL uses `<>`; `!=` also works in most dialects |
+| **`<` `>` `<=` `>=`** | `timestamp1 < timestamp2` | Comparison operators — work on numbers, dates, timestamps, and strings |
 
 <details>
 <summary><b>View NULL & Math Examples</b></summary>
@@ -224,6 +270,36 @@ FROM order_summary;
 | **`SUBSTRING(col, start, len)`** | Extract slice | `SUBSTRING('hello', 1, 3)` | `'hel'` |
 | **`CONCAT(a, b)`** | Join strings | `CONCAT('first', ' ', 'last')`| `'first last'` |
 | **`LIKE` / `ILIKE`** | Pattern match (`%` wildcard) | `WHERE col ILIKE 'A%'` | Case-insensitive starts with A |
+
+<details>
+<summary><b>View String Function Examples</b></summary>
+
+```sql
+-- 1. LOWER + TRIM: Deduplicate emails by normalizing case/whitespace (Exponent) File: Exponent/04_Remove Duplicates Emails.md
+SELECT id, LOWER(TRIM(email)) AS email
+FROM users
+WHERE id IN (
+    SELECT MIN(id)
+    FROM users
+    GROUP BY LOWER(TRIM(email))
+)
+ORDER BY id;
+
+-- 2. LIKE with OR: Flag suspicious receipt numbers containing patterns (Visa - Exponent) File: Exponent/12_Fraudulent Transactions.md
+SELECT * FROM transactions
+WHERE receipt_number LIKE '%999%'
+   OR receipt_number LIKE '%1234%'
+   OR receipt_number LIKE '%XYZ%';
+
+-- 3. FLOOR: Create histogram bins of 5-minute (300-second) intervals (Amazon - Exponent) File: Exponent/10_Session_DA_Amazon.md
+SELECT
+    FLOOR(session_time / 300) AS session_bin,
+    COUNT(*) AS session_count
+FROM sessions
+GROUP BY 1
+ORDER BY 1;
+```
+</details>
 
 ---
 
@@ -274,6 +350,7 @@ WHERE rw_nm <= 2;
 - **Anti-Join (`LEFT JOIN ... WHERE B.col IS NULL`):** Find non-matching records (e.g. users who never purchased).
 - **Self-Join (`JOIN` a table to itself):** Query hierarchies (manager/employee) or compare sequential rows.
 - **Cross-Join (`CROSS JOIN`):** Cartesian product (all combinations) for matrix generation.
+- **LEFT JOIN Filtering Gotcha:** Filters on the right table must go in the `ON` clause, NOT the `WHERE` clause. A filter in the `WHERE` clause filters out the NULL values produced by non-matching rows, effectively converting the `LEFT JOIN` to an `INNER JOIN`.
 
 <details>
 <summary><b>View Join Examples</b></summary>
@@ -311,12 +388,23 @@ JOIN orders AS o2
     ON o1.product_id = o2.product_id AND o1.date >= o2.date
 GROUP BY o1.date, o1.product_id, o1.product_name, o1.revenue
 ORDER BY 1, 2;
+
+-- 6. LEFT JOIN Filtering Gotcha: Keep categories with 0 units ordered in the last 7 days (Amazon) File: Real Interview Questions/Amazon SQL Coding Question/Readme.md
+SELECT
+    i.item_category,
+    COALESCE(SUM(o.order_quantity), 0) AS total_units_ordered
+FROM items i
+LEFT JOIN orders o ON i.item_id = o.item_id 
+    AND CAST(o.order_datetime AS DATE) BETWEEN CURRENT_DATE - 6 AND CURRENT_DATE
+GROUP BY i.item_category;
+-- NOTE: Placing "CAST(o.order_datetime AS DATE) BETWEEN..." in the WHERE clause would filter out items with NULL order quantities, thus omitting categories with zero orders from the final result.
 ```
 </details>
 
 ---
 
 ## 8. Median — Classic Interview Pattern
+**File:** `30_Days_SQL_Challenge/16.sql` — TikTok Interview Question
 
 ```sql
 WITH ranked_cte AS (
@@ -329,7 +417,25 @@ SELECT AVG(views) AS median
 FROM ranked_cte
 WHERE ABS(rn_asc - rn_desc) <= 1;
 ```
-**File:** `30_Days_SQL_Challenge/16.sql` — TikTok Interview Question
+
+```sql
+-- Method 2: Partitioned / Grouped Median (Using COUNT and FLOOR/CEIL)
+-- File: `Real Interview Questions/04_Amazon_SQL_DA_Questions.md` — Question 5 (Amazon)
+-- Best approach when calculating medians grouped by a category (e.g. department_id)
+WITH cte AS (
+    SELECT department_id, salary,
+           ROW_NUMBER() OVER(PARTITION BY department_id ORDER BY salary ASC) AS row_nm,
+           COUNT(*) OVER(PARTITION BY department_id) AS cnt
+    FROM employees
+)
+SELECT department_id,
+       AVG(salary) AS median_salary
+FROM cte
+WHERE row_nm IN (FLOOR((cnt + 1) / 2.0), CEIL((cnt + 1) / 2.0))
+GROUP BY department_id;
+-- Note: Dividing by 2.0 ensures floating-point division in databases that default to integer division.
+```
+
 
 ---
 
@@ -349,19 +455,7 @@ WHERE ABS(rn_asc - rn_desc) <= 1;
 <summary><b>View LIMIT / TOP Examples</b></summary>
 
 ```sql
--- 1. MySQL / PostgreSQL / SQLite — Top 5 products by revenue decrease (Amazon) File: 30_Days_SQL_Challenge/05.sql
-SELECT product_name, revenue_decreased, rev_decreased_ratio
-FROM rev_comp
-WHERE revenue_decreased > 0
-LIMIT 5;
-
--- 2. PostgreSQL — Top 5 customers by return percentage (Amazon) File: 30_Days_SQL_Challenge/26.sql
-SELECT customer_id, return_percentage
-FROM result_cte
-ORDER BY return_percentage DESC
-LIMIT 5;
-
--- 3. MySQL / PostgreSQL / SQLite — Top 5 songs by listen count (Spotify) File: 30_Days_SQL_Challenge/30.sql
+-- 1. MySQL / PostgreSQL / SQLite — Top 5 songs by listen count (Spotify) File: 30_Days_SQL_Challenge/30.sql
 SELECT song_name, times_of_listens
 FROM (
     SELECT s.song_name, COUNT(l.listen_id) AS times_of_listens
@@ -372,13 +466,13 @@ FROM (
 ORDER BY times_of_listens DESC
 LIMIT 5;
 
--- 4. PostgreSQL — FETCH FIRST (SQL standard equivalent of LIMIT) File: 30_Days_SQL_Challenge/28.sql
+-- 2. PostgreSQL — FETCH FIRST (SQL standard equivalent of LIMIT) File: 30_Days_SQL_Challenge/28.sql
 SELECT seller_id, total_sales, total_return_qty
 FROM result_cte
 ORDER BY total_sales DESC, total_return_qty ASC
 FETCH FIRST 3 ROWS ONLY;
 
--- 5. SQL Server equivalent (TOP goes at the start)
+-- 3. SQL Server equivalent (TOP goes at the start)
 SELECT TOP 5 song_name, times_of_listens
 FROM sub
 ORDER BY times_of_listens DESC;
@@ -442,7 +536,6 @@ ROUND((some_float_result)::NUMERIC, 2)
 
 ## 11. Advanced Window Functions
 
-### Distribution & Navigation Functions
 | Function | Syntax | Purpose |
 | :--- | :--- | :--- |
 | **`NTILE(n)`** | `NTILE(4) OVER(ORDER BY salary DESC)` | Splits rows into **n** equal buckets (great for quartiles/percentiles) |
@@ -681,6 +774,17 @@ SELECT customer_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 6;
 (SELECT customer_id FROM table_a EXCEPT SELECT customer_id FROM table_b)
 UNION ALL
 (SELECT customer_id FROM table_b EXCEPT SELECT customer_id FROM table_a);
+
+-- 6. UNION to normalize bidirectional pairs: Count unique conversations (WhatsApp - Exponent) File: Exponent/20__Unique Chat Conversations.md
+-- Trick: UNION both directions, then filter user1 < user2 to keep each pair only once
+WITH messages AS (
+    SELECT sender_id AS user1, receiver_id AS user2 FROM messenger_sends
+    UNION
+    SELECT receiver_id AS user1, sender_id AS user2 FROM messenger_sends
+)
+SELECT COUNT(*) AS unique_conversations
+FROM messages
+WHERE user1 < user2;
 ```
 </details>
 
@@ -873,4 +977,71 @@ QUALIFY ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date) = 3;
 | **`QUALIFY`** | **Filters on window function results** |
 
 ---
+
+## 20. Consecutive Streaks & Active Days (Classic Interview Pattern)
+
+Finding users with activity on consecutive days (e.g. "active for 3 consecutive days") is one of the most popular interview questions.
+
+### Method 1: Chained `LEAD` / `LAG` (Best for fixed count of days, e.g., 3 days)
+This method grabs the next and the day-after-next event dates per user. If the date differences are exactly 1 and 2, the user has 3 consecutive active days.
+
+```sql
+-- Google consecutive purchases: Users with purchases on 3 consecutive days
+-- File: Real Interview Questions/Amazon, Swiggy, Flipkart Questions/Readme.md
+WITH cte AS (
+    SELECT user_id, purchase_date,
+           LEAD(purchase_date, 1) OVER(PARTITION BY user_id ORDER BY purchase_date) AS next_day,
+           LEAD(purchase_date, 2) OVER(PARTITION BY user_id ORDER BY purchase_date) AS day_after_next
+    FROM (SELECT DISTINCT user_id, purchase_date FROM purchases) unique_purchases
+)
+SELECT DISTINCT user_id
+FROM cte
+-- MySQL:
+WHERE DATEDIFF(next_day, purchase_date) = 1 
+  AND DATEDIFF(day_after_next, purchase_date) = 2;
+
+-- PostgreSQL / Standard SQL:
+-- WHERE (next_day - purchase_date) = 1 AND (day_after_next - purchase_date) = 2;
+```
+
+---
+
+### Method 2: Date - Row Number Trick (General solution for streaks of length N)
+Subtracting the sequential row number (`1, 2, 3...`) from the event date creates a **constant group identifier date** for any contiguous sequence of days. 
+
+If you log in on `2026-03-01` (Row 1), `2026-03-02` (Row 2), and `2026-03-03` (Row 3):
+- `2026-03-01 - 1 day = 2026-02-28`
+- `2026-03-02 - 2 days = 2026-02-28`
+- `2026-03-03 - 3 days = 2026-02-28`
+All rows in this streak map to `2026-02-28`. You can then group by `user_id` and this identifier to count streak lengths!
+
+```sql
+-- General Gaps & Islands Solution: Find users with a streak of 3+ consecutive active days
+WITH unique_logins AS (
+    SELECT DISTINCT user_id, CAST(login_time AS DATE) AS login_date
+    FROM user_activity
+),
+ranked_logins AS (
+    SELECT user_id, login_date,
+           ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY login_date) AS rn
+    FROM unique_logins
+),
+streaks AS (
+    SELECT user_id,
+           -- Subtracting the row number from date to group continuous streaks
+           -- PostgreSQL:
+           login_date - CAST(rn || ' days' AS INTERVAL) AS streak_id,
+           -- MySQL:
+           -- DATE_SUB(login_date, INTERVAL rn DAY) AS streak_id,
+           -- SQL Server:
+           -- DATEADD(day, -rn, login_date) AS streak_id,
+           COUNT(*) AS streak_length
+    FROM ranked_logins
+    GROUP BY user_id, streak_id
+)
+SELECT DISTINCT user_id
+FROM streaks
+WHERE streak_length >= 3;
+```
+
 
