@@ -133,6 +133,8 @@ WHERE s.no_of_offences >= 2;
 | **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | date(date, 'start of month')<br>date(date, 'start of year') |
 | **8. TimeStamp Difference in Seconds** | `TIMESTAMPDIFF(SECOND, ts1, ts2)` | `EXTRACT(EPOCH FROM (ts2 - ts1))` | strftime('%s', ts2) - strftime('%s', ts1) |
 | **9. Past N Days (Integer Arithmetic)** | `CURRENT_DATE - INTERVAL 7 DAY`<br>`CURDATE() - INTERVAL 7 DAY` | `CURRENT_DATE - 7` | date('now', '-7 days') |
+| **10. Cast timestamp to date** | `CAST(timestamp_col AS DATE)` | `timestamp_col::date` | `date(timestamp_col)` |
+| **11. Cast varchar to date** | `CAST(varchar_col AS DATE)` | `varchar_col::date` | `date(varchar_col)` |
 
 <details>
 <summary><b>View Comprehensive Date & Time Dialect Examples</b></summary>
@@ -195,6 +197,33 @@ HAVING COUNT(post_id) > 2;
 -- NOTE: In PostgreSQL, CURRENT_DATE is a DATE type and subtracting an integer gives (date - N days).
 -- In MySQL, use: WHERE post_date >= CURDATE() - INTERVAL 7 DAY
 -- In SQLite, use: WHERE post_date >= date('now', '-7 days')
+```
+
+#### 4. Date Difference + Cast
+```sql
+-- MySQL
+SELECT DATEDIFF(CAST(timestamp_col AS DATE), CAST(varchar_col AS DATE)) AS diff_days;
+
+-- PostgreSQL
+SELECT (timestamp_col::date) - (varchar_col::date) AS diff_days;
+```
+
+#### 5. Casting Date + Interval 7 Days
+```sql
+-- MySQL
+SELECT DATE_ADD(CAST(timestamp_col AS DATE), INTERVAL 7 DAY) AS plus_7d;
+
+-- PostgreSQL
+SELECT (timestamp_col::date) + INTERVAL '7 days' AS plus_7d;
+```
+
+#### 6. Formatting a Date (DATE_FORMAT / TO_CHAR) + Cast
+```sql
+-- MySQL
+SELECT DATE_FORMAT(CAST(varchar_col AS DATE), '%Y-%m-%d') AS formatted_date;
+
+-- PostgreSQL
+SELECT TO_CHAR(varchar_col::date, 'YYYY-MM-DD') AS formatted_date;
 ```
 </details>
 
