@@ -128,7 +128,7 @@ WHERE s.no_of_offences >= 2;
 | **2. Format Part of Date** | `DATE_FORMAT(date, '%Y-%m')` | `TO_CHAR(TIMESTAMP '...', 'YYYY-MM')` | strftime('%Y-%m', date) |
 | **3. Get Current Date** | `CURRENT_DATE()` / `CURDATE()`<br>`NOW()` / `CURRENT_TIMESTAMP()` | `CURRENT_DATE`<br>`NOW()` / `CURRENT_TIMESTAMP` | date('now') / CURRENT_DATE<br>datetime('now') / CURRENT_TIMESTAMP |
 | **4. Date Differences** | `DATEDIFF(date1, date2)` *(days)*<br>`TIMESTAMPDIFF(MONTH, d1, d2)` | `date1 - date2` *(integer days)*<br>`AGE(ts1, ts2)` *(interval)* | julianday(d1) - julianday(d2) |
-| **5. Date Arithmetic** | `date + INTERVAL 7 DAY` | `date + INTERVAL '7 days'` | date(date, '+7 days') |
+| **5. Date Arithmetic** | `date + INTERVAL 7 DAY` <br> `date + INTERVAL 1 MONTH`<br>`date + INTERVAL 1 YEAR` | `date + INTERVAL '7 days'`<br>`date + INTERVAL '1 month'`<br>`date + INTERVAL '1 year'` | date(date, '+7 days') |
 | **6. Rolling Window (Range)** | `RANGE BETWEEN INTERVAL 2 DAY PRECEDING AND CURRENT ROW` | `RANGE BETWEEN INTERVAL '2 days' PRECEDING AND CURRENT ROW` | RANGE BETWEEN 172800 PRECEDING AND CURRENT ROW |
 | **7. DATE_TRUNC (Truncate to Month/Year)** | *Not native* — `DATE_FORMAT(date, '%Y-%m-01')` | `DATE_TRUNC('month', date)`<br>`DATE_TRUNC('year', date)` | date(date, 'start of month')<br>date(date, 'start of year') |
 | **8. TimeStamp Difference in Seconds** | `TIMESTAMPDIFF(SECOND, ts1, ts2)` | `EXTRACT(EPOCH FROM (ts2 - ts1))` | strftime('%s', ts2) - strftime('%s', ts1) |
