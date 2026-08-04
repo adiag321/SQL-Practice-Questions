@@ -1,10 +1,13 @@
-# Exponent: Consecutive Logins
+## Consecutive Logins
 
-**Difficulty:** Medium
+| Attribute | Detail |
+|-----------|--------|
+| **Difficulty** | Medium |
+| **Link** | https://www.tryexponent.com/practice/prepare/consecutive-logins |
 
 ---
 
-## Question
+#### Problem Statement
 
 You want to understand how often users log in to your company’s website. You're given a table named `user_activity_log` with the following columns:
 
@@ -24,32 +27,30 @@ Your output should contain the following columns:
 
 ---
 
-## Solution
+#### Create & Insert Statements
 
-### 1. SQLite (used by Exponent code editor)
 ```sql
-WITH ConsecutiveLogins AS (
-    SELECT
-        user_id,
-        timestamp AS current_login,
-        LAG(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) AS previous_login
-    FROM
-        user_activity_log
-    WHERE
-        activity_type = 'LOGIN'
-)
-SELECT
-    user_id,
-    current_login,
-    previous_login,
-    ROUND((julianday(current_login) - julianday(previous_login)) * 24 * 60) AS minutes_elapsed
-FROM
-    ConsecutiveLogins
-WHERE
-    previous_login IS NOT NULL;
+DROP TABLE IF EXISTS user_activity_log;
+
+CREATE TABLE user_activity_log (
+    user_id INT,
+    timestamp TIMESTAMP,
+    activity_type VARCHAR(50)
+);
+
+INSERT INTO user_activity_log (user_id, timestamp, activity_type) VALUES
+(1, '2024-01-01 10:00:00', 'LOGIN'),
+(1, '2024-01-01 12:00:00', 'LOGOUT'),
+(1, '2024-01-02 10:30:00', 'LOGIN'),
+(2, '2024-01-01 09:00:00', 'LOGIN'),
+(2, '2024-01-01 09:15:00', 'LOGOUT'),
+(2, '2024-01-01 10:00:00', 'LOGIN');
 ```
 
-### 2. PostgreSQL
+---
+
+#### Solution
+
 ```sql
 WITH ConsecutiveLogins AS (
     SELECT
@@ -72,25 +73,11 @@ WHERE
     previous_login IS NOT NULL;
 ```
 
-### 3. MySQL
-```sql
-WITH ConsecutiveLogins AS (
-    SELECT
-        user_id,
-        timestamp AS current_login,
-        LAG(timestamp) OVER (PARTITION BY user_id ORDER BY timestamp) AS previous_login
-    FROM
-        user_activity_log
-    WHERE
-        activity_type = 'LOGIN'
-)
-SELECT
-    user_id,
-    current_login,
-    previous_login,
-    ROUND(TIMESTAMPDIFF(MINUTE, previous_login, current_login)) AS minutes_elapsed
-FROM
-    ConsecutiveLogins
-WHERE
-    previous_login IS NOT NULL;
-```
+---
+
+#### Expected Outcome
+
+| user_id | current_login | previous_login | minutes_elapsed |
+|---------|---------------|----------------|-----------------|
+| 1       | 2024-01-02 10:30:00 | 2024-01-01 10:00:00 | 1470 |
+| 2       | 2024-01-01 10:00:00 | 2024-01-01 09:00:00 | 60 |
