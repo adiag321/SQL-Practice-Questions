@@ -59,7 +59,7 @@ INSERT INTO transactions (transaction_id, customer_id, receipt_number, amount) V
 
 ---
 
-#### Solution
+#### Solution 1
 
 ```sql
 WITH SuspiciousTransactions AS (
@@ -78,8 +78,38 @@ SELECT
     s.receipt_number,
     s.no_of_offences
 FROM customers c
-JOIN SuspiciousTransactions s ON c.customer_id = s.customer_id
+JOIN SuspiciousTransactions s
+ON c.customer_id = s.customer_id
 WHERE s.no_of_offences >= 2;
+```
+
+#### Solution 2
+
+```sql
+WITH SuspiciousTransactions AS (
+    SELECT
+        customer_id,
+        COUNT(*)  no_of_offences
+    FROM
+        transactions
+    WHERE
+        receipt_number LIKE '%999%'
+        OR receipt_number LIKE '%1234%'
+        OR receipt_number LIKE '%XYZ%'
+    group by 1
+)
+
+SELECT
+c.first_name,
+c.last_name,
+t.receipt_number,
+s.no_of_offences
+from SuspiciousTransactions as s
+join customers as c
+on s.customer_id = c.customer_id
+join transactions as t
+on s.customer_id = t.customer_id
+where s.no_of_offences >= 2
 ```
 
 ---
