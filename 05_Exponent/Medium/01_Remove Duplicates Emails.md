@@ -51,6 +51,23 @@ WHERE id IN (
 ORDER BY id;
 ```
 
+#### Solution 2
+
+```sql
+with rnked_emails as (select
+id,
+lower(email) as new_email,
+row_number() over(partition by lower(trim(email)) order by id) as rnk
+from users
+order by 1,2,3
+)
+select
+id,
+new_email as email
+from rnked_emails
+where rnk = 1;
+```
+
 ---
 
 #### Sample Output
