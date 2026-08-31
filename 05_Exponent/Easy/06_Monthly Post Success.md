@@ -60,6 +60,8 @@ INSERT INTO post VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     pu.user_type,
     SUM(is_successful_post) AS post_success,
