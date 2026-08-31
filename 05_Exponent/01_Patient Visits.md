@@ -68,6 +68,8 @@ Write a SQL query to list the number of patient visits, categorized by provider 
 
 #### Solution
 ```sql
+-- postgresql
+
 SELECT
     provider.provider_specialty,
     COUNT(DISTINCT visit.patient_id) AS total_visits
@@ -91,14 +93,21 @@ Write a SQL query to list the percentage of patients referred by each provider o
 
 #### Solution 1
 ```sql
+-- postgresql
+
 SELECT
-    ROUND(SUM(is_visit_referral) * 100.00 / COUNT(*), 4) AS referral_percentage
-FROM visit
-WHERE visit_date BETWEEN DATE('2026-05-21') - 90 AND DATE('2026-05-21');
+    p.provider_specialty,
+    ROUND(SUM(v.is_visit_referral) * 100.00 / COUNT(*), 4) AS referral_percentage
+FROM visit AS v
+JOIN provider AS p ON v.provider_id = p.provider_id
+WHERE v.visit_date::date BETWEEN '2026-05-21'::date - 90 AND '2026-05-21'::date
+GROUP BY p.provider_specialty;
 ```
 
 #### Solution 2
 ```sql
+-- postgresql
+
 SELECT
     p.provider_specialty,
     SUM(CASE WHEN v.is_visit_referral = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(v.provider_id) AS referral_percentage
@@ -110,9 +119,10 @@ GROUP BY p.provider_specialty;
 
 #### Sample Output
 
-| referral_percentage |
-|---------------------|
-| 50.0000             |
+| provider_specialty | referral_percentage |
+|---------------------|----------------------|
+| Neurology           | 50.0000              |
+| Pediatrics          | 100.0000             |
 
 ---
 
@@ -121,6 +131,8 @@ Write a SQL query to list the most common sex of patients seen by each provider 
 
 #### Solution
 ```sql
+-- postgresql
+
 WITH gender_rnk AS (
     SELECT
         provider.provider_specialty,
@@ -156,6 +168,8 @@ Write a SQL query to identify the most frequently seen neurologist (provider_spe
 
 #### Solution
 ```sql
+-- sqlite
+
 WITH FilteredVisits AS (
     SELECT
         v.patient_id,
@@ -163,7 +177,7 @@ WITH FilteredVisits AS (
         COUNT(*) AS visit_count
     FROM visit v
     JOIN provider p ON v.provider_id = p.provider_id
-    WHERE v.visit_date >= DATE('now', '-3 months')
+    WHERE v.visit_date >= (SELECT DATE(MAX(visit_date), '-3 months') FROM visit)
       AND p.provider_specialty = 'Neurology'
     GROUP BY v.patient_id, v.provider_id
     HAVING COUNT(*) >= 3
@@ -197,6 +211,8 @@ Write a SQL query to rank provider specialties by the fastest month-over-month g
 
 #### Solution
 ```sql
+-- sqlite
+
 WITH cte1 AS (
     SELECT
         p.provider_specialty,
