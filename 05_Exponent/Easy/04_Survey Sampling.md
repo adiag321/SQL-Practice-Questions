@@ -53,6 +53,8 @@ INSERT INTO customers (customer_id, customer_name, products_bought, last_survey_
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH cte AS (
     SELECT
         *,
