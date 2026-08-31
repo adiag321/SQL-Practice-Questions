@@ -63,11 +63,14 @@ INSERT INTO call_logs (call_id, caller_id, receiver_id, call_date) VALUES
 #### Solution
 
 ```sql
+-- mysql
+
 SELECT
     caller_id,
     COUNT(DISTINCT receiver_id) AS unique_calls
 FROM call_logs
-WHERE call_date BETWEEN CURRENT_DATE() - INTERVAL 7 DAY AND CURRENT_DATE()
+WHERE call_date BETWEEN (SELECT MAX(call_date) FROM call_logs) - INTERVAL 7 DAY
+                     AND (SELECT MAX(call_date) FROM call_logs)
 GROUP BY 1
 HAVING COUNT(DISTINCT receiver_id) >= 3;
 ```
