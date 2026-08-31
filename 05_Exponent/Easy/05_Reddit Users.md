@@ -63,6 +63,8 @@ INSERT INTO user_subreddit (user_id, subreddit_id) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     s.name AS subreddit_name,
     COUNT(DISTINCT u.user_id) AS total_users
