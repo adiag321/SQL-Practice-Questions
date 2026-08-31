@@ -71,6 +71,8 @@ INSERT INTO bookings (booking_id, user_id, driver_id, booking_time, status) VALU
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     u.user_id,
     u.user_name,
