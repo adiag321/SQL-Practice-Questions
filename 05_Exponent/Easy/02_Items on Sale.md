@@ -49,6 +49,8 @@ INSERT INTO products (id, name, type, price) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     name,
     type,
