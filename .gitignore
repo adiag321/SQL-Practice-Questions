@@ -13,3 +13,4 @@ extras/
 *.agent
 .gemini
 .agents/rules/prep-readme-file.md
+/.claude
