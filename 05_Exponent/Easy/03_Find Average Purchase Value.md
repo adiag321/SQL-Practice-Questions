@@ -59,6 +59,8 @@ INSERT INTO user_sessions (session_id, ad_click_timestamp, user_id) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     marketing_channel,
     ROUND(AVG(purchase_value), 2) AS avg_purchase_value
