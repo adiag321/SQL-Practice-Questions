@@ -70,6 +70,8 @@ INSERT INTO post (post_id, post_date, user_id, interface, is_successful_post) VA
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH stats AS (
     SELECT
         user_id,
