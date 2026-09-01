@@ -59,6 +59,8 @@ INSERT INTO orders (order_id, customer_id, order_date, item_id, order_quantity) 
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     customer_id,
     order_date,
