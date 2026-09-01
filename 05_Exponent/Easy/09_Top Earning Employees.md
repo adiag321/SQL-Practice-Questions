@@ -58,6 +58,8 @@ INSERT INTO employees (id, first_name, last_name, salary, department_id) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     id,
     first_name,
