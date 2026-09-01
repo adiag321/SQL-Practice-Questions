@@ -69,6 +69,8 @@ INSERT INTO "transaction" (transaction_id, user_id, product_id, transaction_date
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT AVG(total_duration) AS avg_campaign_length
 FROM (
     SELECT
