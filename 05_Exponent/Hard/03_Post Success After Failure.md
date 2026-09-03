@@ -68,19 +68,21 @@ INSERT INTO post (post_id, post_date, user_id, interface, is_successful_post) VA
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH post_succ_cte AS (
     SELECT
         user_id,
         post_date,
-        is_successful_post AS prev_post_is_succ,
-        LEAD(is_successful_post) OVER (PARTITION BY user_id ORDER BY post_date) AS next_post_is_succ
+        LAG(is_successful_post) OVER (PARTITION BY user_id ORDER BY post_date) AS prev_post_is_succ,
+        is_successful_post AS this_post_is_succ
     FROM post
 )
 SELECT
     user_id,
-    SUM(CASE WHEN prev_post_is_succ = 0 AND next_post_is_succ = 1 THEN 1 ELSE 0 END)
-        * 100.00 / COUNT(*) AS next_post_sc_rate
+    ROUND(SUM(CASE WHEN this_post_is_succ = 1 THEN 1 ELSE 0 END) * 100.00 / COUNT(*), 2) AS next_post_sc_rate
 FROM post_succ_cte
+WHERE prev_post_is_succ = 0
 GROUP BY 1
 ORDER BY 2;
 ```
@@ -92,5 +94,5 @@ ORDER BY 2;
 | user_id | next_post_sc_rate |
 |---------|-------------------|
 | 3       | 0.00              |
-| 1       | 25.00             |
-| 2       | 33.33             |
+| 1       | 50.00             |
+| 2       | 100.00            |
