@@ -106,6 +106,8 @@ INSERT INTO employees_projects (project_id, employee_id) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH salary_rnks AS (
     SELECT
         e.*,
