@@ -87,6 +87,8 @@ INSERT INTO orders (order_id, customer_id, order_date, order_amount, department_
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH orders_per_year AS (
     SELECT
         EXTRACT(YEAR FROM o.order_date) AS year,
