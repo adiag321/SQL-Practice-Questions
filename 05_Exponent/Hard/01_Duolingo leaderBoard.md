@@ -2,7 +2,7 @@
 
 | Attribute | Detail |
 |-----------|--------|
-| **Difficulty** | Medium |
+| **Difficulty** | Hard |
 | **Companies** | Duolingo |
 | **Link** | https://www.tryexponent.com/practice/prepare/duolingo-leaderboards |
 
@@ -104,6 +104,8 @@ INSERT INTO lessons_completed (lesson_id, user_id, completed_date) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH RankedLessons AS (
     SELECT
         u.username,
@@ -135,6 +137,7 @@ ORDER BY language, rank, username;
 | Charlie  | French   | 3             | 1    |
 | Alice    | French   | 2             | 2    |
 | Diana    | French   | 2             | 2    |
+| Bob      | French   | 1             | 3    |
 | Eve      | Spanish  | 4             | 1    |
 | Alice    | Spanish  | 3             | 2    |
 | Bob      | Spanish  | 3             | 2    |
