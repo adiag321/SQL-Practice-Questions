@@ -39,6 +39,8 @@ INSERT INTO users (id, email) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     id,
     LOWER(TRIM(email)) AS email
@@ -54,18 +56,21 @@ ORDER BY id;
 #### Solution 2
 
 ```sql
-with rnked_emails as (select
-id,
-lower(email) as new_email,
-row_number() over(partition by lower(trim(email)) order by id) as rnk
-from users
-order by 1,2,3
+-- postgresql
+
+WITH rnked_emails AS (
+    SELECT
+        id,
+        LOWER(TRIM(email)) AS new_email,
+        ROW_NUMBER() OVER (PARTITION BY LOWER(TRIM(email)) ORDER BY id) AS rnk
+    FROM users
 )
-select
-id,
-new_email as email
-from rnked_emails
-where rnk = 1;
+SELECT
+    id,
+    new_email AS email
+FROM rnked_emails
+WHERE rnk = 1
+ORDER BY id;
 ```
 
 ---
