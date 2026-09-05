@@ -51,6 +51,8 @@ INSERT INTO transactions (id, product_id, date) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH recent_prod AS (
     SELECT
         p.id,
