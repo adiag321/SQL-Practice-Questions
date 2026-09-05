@@ -58,6 +58,8 @@ INSERT INTO posts VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     u.username,
     COUNT(DISTINCT p.post_id) AS num_popular_posts
