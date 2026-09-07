@@ -96,6 +96,8 @@ INSERT INTO exchange_rate (id, source_currency_code, target_currency_code, rate)
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     u.user_city,
     COUNT(t.id) AS number_of_transactions
