@@ -62,6 +62,8 @@ INSERT INTO orders (order_id, customer_id, order_date, order_amount, department_
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     COUNT(DISTINCT customer_id) AS customers,
     d.department_name
