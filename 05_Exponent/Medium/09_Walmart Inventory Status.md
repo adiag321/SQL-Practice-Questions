@@ -53,6 +53,8 @@ INSERT INTO sales (sale_id, product_id, quantity_sold, sale_date) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT DISTINCT
     p.product_id,
     p.product_name,
