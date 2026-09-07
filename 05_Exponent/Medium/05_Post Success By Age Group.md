@@ -64,6 +64,8 @@ INSERT INTO post (post_id, post_date, user_id, interface, is_successful_post) VA
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH cte AS (
     SELECT
         EXTRACT(MONTH FROM p.post_date) AS month,
