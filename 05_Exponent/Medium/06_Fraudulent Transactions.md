@@ -62,6 +62,8 @@ INSERT INTO transactions (transaction_id, customer_id, receipt_number, amount) V
 #### Solution 1
 
 ```sql
+-- postgresql
+
 WITH SuspiciousTransactions AS (
     SELECT
         customer_id,
@@ -86,30 +88,32 @@ WHERE s.no_of_offences >= 2;
 #### Solution 2
 
 ```sql
+-- postgresql
+
 WITH SuspiciousTransactions AS (
     SELECT
         customer_id,
-        COUNT(*)  no_of_offences
-    FROM
-        transactions
-    WHERE
-        receipt_number LIKE '%999%'
-        OR receipt_number LIKE '%1234%'
-        OR receipt_number LIKE '%XYZ%'
-    group by 1
+        COUNT(*) AS no_of_offences
+    FROM transactions
+    WHERE receipt_number LIKE '%999%'
+       OR receipt_number LIKE '%1234%'
+       OR receipt_number LIKE '%XYZ%'
+    GROUP BY 1
 )
-
 SELECT
-c.first_name,
-c.last_name,
-t.receipt_number,
-s.no_of_offences
-from SuspiciousTransactions as s
-join customers as c
-on s.customer_id = c.customer_id
-join transactions as t
-on s.customer_id = t.customer_id
-where s.no_of_offences >= 2
+    c.first_name,
+    c.last_name,
+    t.receipt_number,
+    s.no_of_offences
+FROM SuspiciousTransactions AS s
+JOIN customers AS c
+    ON s.customer_id = c.customer_id
+JOIN transactions AS t
+    ON s.customer_id = t.customer_id
+WHERE s.no_of_offences >= 2
+  AND (t.receipt_number LIKE '%999%'
+    OR t.receipt_number LIKE '%1234%'
+    OR t.receipt_number LIKE '%XYZ%');
 ```
 
 ---
