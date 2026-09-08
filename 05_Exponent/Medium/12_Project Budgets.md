@@ -105,6 +105,8 @@ INSERT INTO employees_projects (project_id, employee_id) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 SELECT
     p.id AS id,
     p.title,
