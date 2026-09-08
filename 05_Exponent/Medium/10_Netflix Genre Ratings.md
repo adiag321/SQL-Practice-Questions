@@ -69,6 +69,8 @@ INSERT INTO rating (user_id, movie_id, rating) VALUES
 #### Solution
 
 ```sql
+-- postgresql
+
 WITH cte1 AS (
     SELECT
         m.title,
